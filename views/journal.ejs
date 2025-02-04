@@ -7,7 +7,39 @@
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 
-    <script src="journal.js"></script> 
+    <script>
+	  document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('journal-entry-form');
+
+    if (form) {
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            alert("Journal Entry Submitted!");
+
+            // Get the values from the form inputs
+            const title = document.getElementById('title').value;
+            const content = document.getElementById('content').value;
+
+            // Check if local storage is available
+            if (typeof (Storage) !== "undefined") {
+                // Create an array to store the entries
+                let entries = JSON.parse(localStorage.getItem('journal_entries')) || [];
+
+                // Add the new entry to the array
+                entries.push({ title, content });
+
+                // Save the updated array to local storage
+                localStorage.setItem('journal_entries', JSON.stringify(entries));
+
+                // Clear the form
+                // form.reset();
+            } else {
+                alert('Local storage is not supported in your browser.');
+            }
+        });
+    }
+});
+	</script> 
 </head>
 <body>
     <header>
@@ -165,22 +197,25 @@
                     limitedEntries.forEach(entry => {
                         const entryDiv = document.createElement('div');
                         entryDiv.classList.add('entry');
-			//Create child elements so that the content is appended instead of directly injected
-			//This prevents potential XMS injection
+						//Create child elements so that the content is appended instead of directly injected
+						//This prevents potential XMS injection
+						const styleLine = document.createElement('p');
+						styleLine.append('---------------------------------------------------------');
+						entryDiv.append(styleLine);
                         const title = document.createElement('h3');
-			title.append(entry.title);
-			entryDiv.appendChild(title);
-			const content = document.createElement('p');
-			//Since the content is appended using quill.innerHTML
-			//Kept to innerHTML, however there are still ways to work around this
-			content.innerHTML = entry.content.substring(0, 100);
-			const mood = document.createElement('p');
-			const date = new Date(entry.date).toLocaleDateString();
-			const moodText = `Mood: ${entry.mood} | Date: ${date}`;
-			mood.append(moodText);
-			entryDiv.appendChild(content);
-			entryDiv.appendChild(mood);
-			//Append everything to the container
+						title.append(entry.title);
+						entryDiv.appendChild(title);
+						const content = document.createElement('p');
+						//Since the content is appended using quill.innerHTML
+						//Kept to innerHTML, however there are still ways to work around this
+						content.innerHTML = entry.content.substring(0, 100);
+						const mood = document.createElement('p');
+						const date = new Date(entry.date).toLocaleDateString();
+						const moodText = `Mood: ${entry.mood} | Date: ${date}`;
+						mood.append(moodText);
+						entryDiv.appendChild(content);
+						entryDiv.appendChild(mood);
+						//Append everything to the container
                         entriesContainer.appendChild(entryDiv);
                     });
                 } else {
