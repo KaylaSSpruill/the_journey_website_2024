@@ -199,8 +199,7 @@
            
 
             // Display event under the form
-            const eventElement = document.createElement("div");
-            eventElement.innerHTML = `<strong>${event.name}</strong> (${event.date})<br>${event.notes}<hr>`;
+            const eventElement = createEventDisplay(event);
             eventList.appendChild(eventElement);
 
             HighlightE(event);
@@ -240,12 +239,7 @@
                 eventList.innerHTML = '';
                 
                 events.forEach(event => {
-                    // Create the event element (using textContent to avoid HTML injection)
-                    const eventElement = document.createElement("div");
-
-                    eventElement.classList.add('event'); // Optional: add a class for styling
-                    eventElement.innerHTML = `<strong>${event.name}</strong> (${event.date})<br>${event.notes}<hr>`;
-
+                    const eventElement = createEventDisplay(event);
                     // Append the event element to the event list
                     eventList.appendChild(eventElement);
 
@@ -272,6 +266,23 @@
             deleteEvent(eventId);
         });
     });
+	
+		function createEventDisplay(event) {
+		  console.log("This is the event:", event);
+		  const eventElement = document.createElement("div");
+          eventElement.classList.add('event'); // Optional: add a class for styling
+		  const eventName = document.createElement('strong');
+		  eventName.append(event.name);
+		  eventElement.appendChild(eventName);
+		  eventElement.append(` (${event.date})`);
+		  const linebreak = document.createElement("br");
+		  eventElement.appendChild(linebreak);
+		  eventElement.append(event.notes);
+		  const horizontalBreak = document.createElement("hr");
+		  eventElement.appendChild(horizontalBreak);
+		  console.log("This is the element: ", eventElement);
+		  return eventElement;
+		}
 
         // Delete event function
         function deleteEvent(eventId) {
