@@ -11,14 +11,16 @@
 </head>
 <body>
     <header>
+		<h1>Journal</h1>
         <% if (typeof username !== 'undefined') { %>
             <div class="header">
-                <h1 class="title">The Journal</h1>
                 <img src="/images/noprofilephoto.jpg" alt="Profile Photo" class="profile-photo">
                 <div class="username-dropdown">
                     <span class="profile-name"><%= username %></span>
                     <div class="dropdown-content">
                         <p><a href="/user">Profile</a></p>
+                        <p><a href="/user">Settings</a></p>
+                        <p><a href="/user">Logout</a></p>
     
                     </div>
                 </div>
