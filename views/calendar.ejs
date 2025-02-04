@@ -266,11 +266,11 @@
             deleteEvent(eventId);
         });
     });
-	
+		//Separate responsibility of the event display so that there will be less coupling issue
 		function createEventDisplay(event) {
 		  console.log("This is the event:", event);
 		  const eventElement = document.createElement("div");
-          eventElement.classList.add('event'); // Optional: add a class for styling
+          	  eventElement.classList.add('event'); // Optional: add a class for styling
 		  const eventName = document.createElement('strong');
 		  eventName.append(event.name);
 		  eventElement.appendChild(eventName);
@@ -280,7 +280,6 @@
 		  eventElement.append(event.notes);
 		  const horizontalBreak = document.createElement("hr");
 		  eventElement.appendChild(horizontalBreak);
-		  console.log("This is the element: ", eventElement);
 		  return eventElement;
 		}
 
