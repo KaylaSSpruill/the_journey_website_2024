@@ -260,6 +260,33 @@ app.delete('/calendar', async (req, res) => {
     }
 });
 
+//app.delete for journal
+{}
+app.delete('/journal', async(rec, res) => {
+    const { title, content, mood, date } = req.body;
+    const userId = req.session.userId;
+    
+    if (!userId) {
+        return res.status(401).send('User not loggeed in');
+    }
+    try {
+
+        const entry = await Journal.findOne({_id: entryId, user_id: userId});
+ 
+        if(!entry) {
+            return res.status(404).send('Entry not found or does not belong to this user');
+
+        }
+
+        await Journal.findByIdAndDelete(journalEntries);
+        res.json({ success: true, message: 'Journal entry deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting event:', error);
+        res.status(500).send('Failed to delete entry');
+    }
+
+
+});
 
 app.post("/login", async (req, res) => {
     try {

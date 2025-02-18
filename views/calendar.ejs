@@ -268,8 +268,8 @@
 
         document.querySelectorAll('.del-button').forEach(button => {
         button.addEventListener('click', function() {
-            const eventId = this.getAttribute('data-id');
-            deleteEvent(eventId);
+            const eventId = this.getAttribute('data-id'); //example for journal
+            deleteEvent(eventId); 
         });
     });
 

@@ -107,6 +107,19 @@ form {
     background-color: #ffffffaf;
 
 }
+.del-button {
+    background-color: white;
+    box-shadow: 1px 2px 1px #BDD09F;
+    color: black;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 5px;
+}
+.del-button:hover {
+    background-color: #668D3C;
+}
 
 .form-input {
     margin: 0 auto;
