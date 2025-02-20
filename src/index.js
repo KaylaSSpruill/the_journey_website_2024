@@ -63,7 +63,7 @@ app.get('/main', (req, res) => {
 });
 
 app.get('/about', (req, res) => {
-    res.render('about', { username: req.session.username, req.session.profile_pic });
+    res.render('about', { username: req.session.username, profile_pic: req.session.profile_pic });
 });
 
 app.get('/user', async (req, res) => {
