@@ -4,15 +4,27 @@ const bcrypt = require('bcrypt');
 const session = require('express-session');
 const { User, Journal, Calendar} = require('./config');
 const bodyParser = require('body-parser');
+const multer = require('multer');
 
 const app = express();
+
+//Storage for image upload
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'uploads/')
+    },
+    filename: function (req, file, cb) {
+        cb(null, file.originalname)
+    }
+});
+
+const upload = multer({ storage: storage });
 
 app.use(express.json());
 
 app.use(express.urlencoded({extended: false}));
 
 app.use(bodyParser.urlencoded({ extended: true }));
-
 
 app.use(session({
     secret: 'your-secret-key',
@@ -25,10 +37,14 @@ app.set('view engine', 'ejs');
 
 app.use(express.static("public"));
 
+// Serve static images
+app.use('/uploads', express.static(path.join(__dirname, "uploads")));
+
 app.get('/login', (req,res) => {
     if(req.session.user) {
         res.render('login', {
-            user: req.session.username
+            user: req.session.username,
+			profile_pic: req.session.profile_pic
         });
     }else {
         res.render('login', {
@@ -42,12 +58,12 @@ app.get('/signup', (req,res) => {
 });
 
 app.get('/main', (req, res) => {
-    res.render('main', { username: req.session.username });
+    res.render('main', { username: req.session.username, profile_pic: req.session.profile_pic });
 
 });
 
 app.get('/about', (req, res) => {
-    res.render('about', { username: req.session.username });
+    res.render('about', { username: req.session.username, req.session.profile_pic });
 });
 
 app.get('/user', async (req, res) => {
@@ -64,6 +80,7 @@ app.get('/user', async (req, res) => {
 
         res.render('user', {
             username: req.session.username,
+			profile_pic: req.session.profile_pic,
             journalEntries: journalEntries
         });
     } catch (error) {
@@ -273,6 +290,7 @@ app.post("/login", async (req, res) => {
         if (isPasswordMatch) {
             req.session.username = check.username;
             req.session.userId = check._id;
+			req.session.profile_pic = check.profile_pic;
             res.redirect('/main');
         } else {
             res.send("Incorrect password");
@@ -350,6 +368,49 @@ app.post('/change-username', async (req, res) => {
         console.error('Error during username update:', err);
         res.status(500).send('Something went wrong with username, please try again.');
     }
+});
+
+app.post('/change-profilepic', upload.single('profile_pic'), async (req, res) => {
+	if (!req.file) {
+        return res.status(400).send("No file uploaded.");
+    }
+	const name = req.file.filename; // Assuming multer saves the file path
+	//Now we need to store this in the database
+    /** @todo This needs to be removed later, should dynamically construct the image path and only save the name of the file */ 
+	const imagePath = `http://localhost:5001/uploads/${name}`; //
+	const userId = req.session.userId;
+	
+	
+	if (!userId) {
+		//Hopefully never reached here because this is fatal error
+		return res.status(400).send("User not logged in.");
+	}
+	
+	try {
+		const existingUser = await User.findOne({ _id: userId });
+		
+		if (existingUser) {
+			const result = await User.updateOne(
+				{ _id: userId },
+				{ $set: { profile_pic: imagePath } }
+			);
+			
+			console.log("Update Result: ", result);
+			
+			if (result.acknowledged) {
+				req.session.profile_pic = imagePath;
+				/** @todo Needs to update cookie as well! Add this after the branches merged together. */
+				console.log("Profile picture successfully updated!");
+				res.redirect('/user');
+			} else {
+				console.log("User profile picture update failed!");
+				res.status(500).send('Error updating username.');
+			}
+		}
+	} catch (err) {
+		console.error("Error during profile picture update: ", err);
+		res.status(500).send("Profile picture update fails, check to see errors and try again");
+	}
 });
 
 

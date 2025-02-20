@@ -16,7 +16,11 @@ const LoginSchema = new mongoose.Schema({
     password: {
         type: String,
         required: true
-    }
+    },
+	profile_pic: {
+		type: String,
+		default: "/images/noprofilephoto.jpg"
+	}
 });
 
 const JournalSchema = new mongoose.Schema({

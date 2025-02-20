@@ -44,9 +44,9 @@
             </form>
 			
 			<button onclick="toggleForm('profilepicForm')">Change Profile Picture</button>
-			<form id="profilepicForm" action="/change-profilepic" method="POST" style="display:none;">
+			<form id="profilepicForm" action="/change-profilepic" method="POST" enctype="multipart/form-data" style="display:none;">
 				<label for="newProfilePic">New Profile Pic: </label>
-				<input type="file" id="newProfilePic" name="newProfilePic" required>
+				<input type="file" id="newProfilePic" name="profile_pic" required>
 				<button type="submit">Update ProfilePic</button>
 			</form>
 
