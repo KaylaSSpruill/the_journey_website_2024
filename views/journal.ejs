@@ -125,7 +125,8 @@
                 mood: mood,
                 date: date
             };
-    
+    	    
+	    
             fetch('/journal', {
                 method: 'POST',
                 headers: {
@@ -148,6 +149,7 @@
             });
         };
     
+
         function displayEntries() {
             fetch('/user-journal') 
             .then(response => response.json())
@@ -161,11 +163,22 @@
                     limitedEntries.forEach(entry => {
                         const entryDiv = document.createElement('div');
                         entryDiv.classList.add('entry');
-                        entryDiv.innerHTML = `
-                            <h3>${entry.title}</h3>
-                            <p>${entry.content.substring(0, 100)}...</p>
-                            <p>Mood: ${entry.mood} | Date: ${new Date(entry.date).toLocaleDateString()}</p>
-                        `;
+			//Create child elements so that the content is appended instead of directly injected
+			//This prevents potential XMS injection
+                        const title = document.createElement('h3');
+			title.append(entry.title);
+			entryDiv.appendChild(title);
+			const content = document.createElement('p');
+			//Since the content is appended using quill.innerHTML
+			//Kept to innerHTML, however there are still ways to work around this
+			content.innerHTML = entry.content.substring(0, 100);
+			const mood = document.createElement('p');
+			const date = new Date(entry.date).toLocaleDateString();
+			const moodText = `Mood: ${entry.mood} | Date: ${date}`;
+			mood.append(moodText);
+			entryDiv.appendChild(content);
+			entryDiv.appendChild(mood);
+			//Append everything to the container
                         entriesContainer.appendChild(entryDiv);
                     });
                 } else {
