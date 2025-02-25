@@ -190,7 +190,8 @@
             .then(entries => {
                 const entriesContainer = document.querySelector('.entries-container');
                 entriesContainer.innerHTML = '';
-
+				//Sort through the entries based on date, from most recent to oldest
+				entries.sort(compareDate);
                 const limitedEntries = entries.slice(0, 5);
 
                 if (limitedEntries.length > 0) {
@@ -210,7 +211,8 @@
 						//Kept to innerHTML, however there are still ways to work around this
 						content.innerHTML = entry.content.substring(0, 100);
 						const mood = document.createElement('p');
-						const date = new Date(entry.date).toLocaleDateString();
+						const date = new Date(entry.date).toISOString().split('T')[0];
+						console.log(date);
 						const moodText = `Mood: ${entry.mood} | Date: ${date}`;
 						mood.append(moodText);
 						entryDiv.appendChild(content);
@@ -223,7 +225,14 @@
                 }
             })
             .catch(error => console.error('Error fetching journal entries:', error));
-        }
+        };
+		//Sorting function
+		function compareDate(a, b) {
+		  const firstDate = new Date(a.date);
+		  const secondDate = new Date(b.date);
+		  const result = (a < b) ? 1 : (a > b) ? -1 : 0;
+		  return result;
+		};
 
     </script>    
     
