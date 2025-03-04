@@ -5,7 +5,9 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="login.css">
+    <link rel="stylesheet" href="notify.css">
     <title>Login</title>
+    <script src="notification.js"></script>
 </head>
 <body>
     <div class="center">
@@ -15,7 +17,7 @@
         <div class="login-header">
             <header>Login</header>
         </div>
-        <form action="/login" method="post">
+        <form action="/login" method="post" id="login-form">
             <div class="input-box">
                 <input type="text" id="username" name="username" class="input-field" placeholder="Username" autocomplete="off" required>
             </div>
@@ -32,7 +34,7 @@
                 </section>
             </div>
             <div class="input-submit">
-                <button type="submit" class="submit-btn">Sign In</button>
+                <button type="submit" class="submit-btn" >Sign In</button>
             </div>
         </form>
         <br>
@@ -41,4 +43,35 @@
         </div>
     </div>
 </body>
+<script>
+    document.getElementById("login-form").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+
+        fetch('/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({username, password}) 
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.redirect) {
+                window.location.href = data.redirect;
+            } else {
+                const errMessage = data.error || "An unknown error has occured. Please try again"
+                showPopup(errMessage, 'error');
+                console.log('error: ', errMessage);
+            }
+        })
+        .catch(error => {
+            console.error("Login error:", error);
+            showPopup("An error occured, please try again.", 'error');
+        });
+          document.getElementById("username").value = "";
+          document.getElementById("password").value = "";
+    });
+</script>
 </html>
