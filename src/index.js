@@ -36,6 +36,9 @@ app.use(session({
 app.set('view engine', 'ejs');
 
 app.use(express.static("public"));
+//app.use(express.static(path.join(__dirname, "js")));
+//app.use('/src',express.static(path.join(__dirname, 'src')));
+
 
 // Serve static images
 app.use('/uploads', express.static(path.join(__dirname, "uploads")));
@@ -162,7 +165,7 @@ app.get('/user-journal', async (req, res) => {
             res.json(journalEntries);
         } catch (error) {
             console.error('Error fetching journal entries:', error);
-            res.status(500).send('Failed to fetch journal entries');
+            res.status(500).json({ error : 'Failed to fetch journal entries'});
         }    
 });
 
@@ -191,7 +194,7 @@ app.post('/journal', async (req, res) => {
         res.json({ success: true, journalEntries: journalEntries });
     } catch (error) {
         console.error('Error saving journal entry:', error);
-        res.status(500).send('Failed to save journal entry');
+        res.status(500).json({error : 'Failed to save journal entry'});
     }
 });
 
@@ -243,7 +246,7 @@ app.post('/calendar', async (req, res) => {
         res.json({ success: true, message: 'Event created successfully' });
     } catch (error) {
         console.error('Error saving event:', error);
-        res.status(500).send('Failed to save event');
+        res.status(500).json({error: 'Failed to save event'});
     }
 });
 
@@ -279,26 +282,27 @@ app.delete('/calendar', async (req, res) => {
 
 
 app.post("/login", async (req, res) => {
+    console.log("Received login request with:", req.body);
     try {
         const check = await User.findOne({ username: req.body.username });
-
+        console.log("Check: ", check);
         if (!check) {
-            return res.send("Username not found");
+            return res.status(401).json({error: "Username not found"});
         }
 
         const isPasswordMatch = await bcrypt.compare(req.body.password, check.password);
         if (isPasswordMatch) {
             req.session.username = check.username;
             req.session.userId = check._id;
-			req.session.profile_pic = check.profile_pic;
-            res.redirect('/main');
+			      req.session.profile_pic = check.profile_pic;
+            res.status(200).json({success: true, message: 'Login successful!', redirect: '/main'});
         } else {
-            res.send("Incorrect password");
+            return res.status(401).json({ error: "Incorrect password"});
         }
 
     } catch (error) {
         console.error("Error during login:", error); 
-        res.send("Something went wrong, please try again.");
+        res.status(500).json({ error: "Something went wrong, please try again."});
     }
 });
 
@@ -307,7 +311,7 @@ app.post('/change-password', async (req, res) => {
     const userId = req.session.userId;
 
     if (!userId) {
-        return res.status(400).send('User not logged in');
+        return res.status(400).json({ error: 'User not logged in'});
     }
 
     try {
@@ -323,14 +327,15 @@ app.post('/change-password', async (req, res) => {
 
         if (result.modifiedCount === 1) {
             console.log("Password successfully updated!");
+            res.status(200).json({success: "Password successfully updated!"})
             res.redirect('/user');
         } else {
             console.log("Password update failed!");
-            res.status(500).send('Error updating password.');
+            res.status(500).json({error: 'Error updating password.'});
         }
     } catch (err) {
         console.error('Error during password update:', err);
-        res.status(500).send('Something went wrong, please try again.');
+        res.status(500).json({ error: 'Something went wrong, please try again.'});
     }
 });
 
@@ -339,7 +344,7 @@ app.post('/change-username', async (req, res) => {
     const userId = req.session.userId;
 
     if (!userId) {
-        return res.status(400).send('User not logged in');
+        return res.status(400).json({error: 'User not logged in'});
     }
 
     try {
