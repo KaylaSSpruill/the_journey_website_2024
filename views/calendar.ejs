@@ -2,9 +2,10 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Calendar</title>
     <link rel="stylesheet" href="/calendar.css">
-    
+    <link rel="stylesheet" href="/notify.css">
+    <title>Calendar</title>
+    <script src="notification.js"></script>
 </head>
 <body>
     <header>
@@ -222,7 +223,8 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert('Event created successfully');
+                    // alert('Event created successfully');
+                    showPopup('Event created successfully', 'success');
                 } else {
                     console.error('Error creating event:', data.message);
                 }
@@ -293,27 +295,27 @@
 
         // Delete event function
         function deleteEvent(eventId) {
-        fetch('/calendar', {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ eventId: eventId })  // Send the eventId in the request body
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert(data.message);  // Show success message
-                // Remove the event element from the DOM
-                document.querySelector(`.event[data-id='${eventId}']`).remove();
-            } else {
-                alert('Failed to delete event');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error deleting event');
-        });
+            fetch('/calendar', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ eventId: eventId })  // Send the eventId in the request body
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showPopup('Event deleted successfully', 'success');  // Show success message
+                    // Remove the event element from the DOM
+                    document.querySelector(`.event[data-id='${eventId}']`).remove();
+                } else {
+                    alert('Failed to delete event');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error deleting event');
+            });
     }
 
         generate();
