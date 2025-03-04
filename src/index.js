@@ -2,8 +2,10 @@ const express = require('express');
 const path = require("path");
 const bcrypt = require('bcrypt');
 const session = require('express-session');
+const cookieParser = require('cookie-parser');
 const { User, Journal, Calendar} = require('./config');
 const bodyParser = require('body-parser');
+const { checkAuthCookie } = require('./controllers/cookieControllers.js');
 
 const app = express();
 
@@ -13,6 +15,7 @@ app.use(express.urlencoded({extended: false}));
 
 app.use(bodyParser.urlencoded({ extended: true }));
 
+app.use(cookieParser());
 
 app.use(session({
     secret: 'your-secret-key',
@@ -28,12 +31,18 @@ app.use(express.static("public"));
 //app.use('/src',express.static(path.join(__dirname, 'src')));
 
 
+//Middleware for user login and basic set up
+app.use('/', (req, res, next) => {
+	checkAuthCookie(req);
+	next();
+});
+
 app.get('/login', (req,res) => {
-    if(req.session.user) {
+    if (req.session.username) {
         res.render('login', {
             user: req.session.username
         });
-    }else {
+    } else {
         res.render('login', {
             username: null
         });
@@ -275,10 +284,27 @@ app.post("/login", async (req, res) => {
 
         const isPasswordMatch = await bcrypt.compare(req.body.password, check.password);
         if (isPasswordMatch) {
-            req.session.username = check.username;
-            req.session.userId = check._id;
-            res.status(200).json({success: true, message: 'Login successful!', redirect: '/main'});
-            // res.redirect('/main');
+			const remembered = req.body.check; //If the box is checked, the value is on, otherwise it is undefined
+			console.log("This is the remembered: ", remembered); //Use this to confirm the above statement
+			req.session.username = check.username;
+            req.session.userId = check._id;			
+			  if (remembered) {
+				//When switch to JWT token, replace the username with the actual JWT token
+				console.log("Setting cookies!");
+				res.cookie("username", check.username, {
+					httpOnly: true, // Prevents JavaScript access (protects from XSS)
+					secure: true, // Ensures the cookie is sent only over HTTPS
+					sameSite: "Strict", // Helps prevent CSRF attacks
+					maxAge: 60 * 60 * 1000 // 1 day expiration
+				});
+				res.cookie("userId", check._id, {
+					httpOnly: true, // Prevents JavaScript access (protects from XSS)
+					secure: true, // Ensures the cookie is sent only over HTTPS
+					sameSite: "Strict", // Helps prevent CSRF attacks
+					maxAge: 60 * 60 * 1000 // 1 day expiration
+				});
+			    }
+			    res.status(200).json({success: true, message: 'Login successful!', redirect: '/main'});
         } else {
             return res.status(401).json({ error: "Incorrect password"});
         }
@@ -359,7 +385,7 @@ app.post('/change-username', async (req, res) => {
 });
 
 
-app.get('/logout', (req, res) => {
+app.get('/logout', (req, res) => {	
     req.session.destroy((err) => {
         if (err) {
             console.log("Error logging out");
