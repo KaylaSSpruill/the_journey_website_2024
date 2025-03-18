@@ -1,6 +1,6 @@
 const express = require('express');
 const path = require("path");
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
 const session = require('express-session');
 const cookieParser = require('cookie-parser');
 const { User, Journal, Calendar} = require('./config');
