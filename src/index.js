@@ -5,9 +5,23 @@ const session = require('express-session');
 const cookieParser = require('cookie-parser');
 const { User, Journal, Calendar} = require('./config');
 const bodyParser = require('body-parser');
+const multer = require('multer');
 const { checkAuthCookie } = require('./controllers/cookieControllers.js');
 const { createToken, decodeToken } = require('./controllers/jwtControllers.js');
+
 const app = express();
+
+//Storage for image upload
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'uploads/')
+    },
+    filename: function (req, file, cb) {
+        cb(null, file.originalname)
+    }
+});
+
+const upload = multer({ storage: storage });
 
 app.use(express.json());
 
@@ -30,6 +44,8 @@ app.use(express.static("public"));
 //app.use(express.static(path.join(__dirname, "js")));
 //app.use('/src',express.static(path.join(__dirname, 'src')));
 
+// Serve static images
+app.use('/uploads', express.static(path.join(__dirname, "uploads")));
 
 //Middleware for user login and basic set up
 app.use('/', (req, res, next) => {
@@ -410,7 +426,51 @@ app.post('/change-username', async (req, res) => {
     }
 });
 
-app.get('/logout', (req, res) => {	
+app.post('/change-profilepic', upload.single('profile_pic'), async (req, res) => {
+	if (!req.file) {
+        return res.status(400).send("No file uploaded.");
+    }
+	const name = req.file.filename; // Assuming multer saves the file path
+	//Now we need to store this in the database
+    /** @todo This needs to be removed later, should dynamically construct the image path and only save the name of the file */ 
+	const imagePath = `http://localhost:5001/uploads/${name}`; //
+	const userId = req.session.userId;
+	
+	
+	if (!userId) {
+		//Hopefully never reached here because this is fatal error
+		return res.status(400).send("User not logged in.");
+	}
+	
+	try {
+		const existingUser = await User.findOne({ _id: userId });
+		
+		if (existingUser) {
+			const result = await User.updateOne(
+				{ _id: userId },
+				{ $set: { profile_pic: imagePath } }
+			);
+			
+			console.log("Update Result: ", result);
+			
+			if (result.acknowledged) {
+				req.session.profile_pic = imagePath;
+				/** @todo Needs to update cookie as well! Add this after the branches merged together. */
+				console.log("Profile picture successfully updated!");
+				res.redirect('/user');
+			} else {
+				console.log("User profile picture update failed!");
+				res.status(500).send('Error updating username.');
+			}
+		}
+	} catch (err) {
+		console.error("Error during profile picture update: ", err);
+		res.status(500).send("Profile picture update fails, check to see errors and try again");
+	}
+});
+
+
+app.get('/logout', (req, res) => {
     req.session.destroy((err) => {
         if (err) {
             console.log("Error logging out");
