@@ -2,9 +2,12 @@ const express = require('express');
 const path = require("path");
 const bcrypt = require('bcrypt');
 const session = require('express-session');
+const cookieParser = require('cookie-parser');
 const { User, Journal, Calendar} = require('./config');
 const bodyParser = require('body-parser');
 const multer = require('multer');
+const { checkAuthCookie } = require('./controllers/cookieControllers.js');
+const { createToken, decodeToken } = require('./controllers/jwtControllers.js');
 
 const app = express();
 
@@ -26,6 +29,8 @@ app.use(express.urlencoded({extended: false}));
 
 app.use(bodyParser.urlencoded({ extended: true }));
 
+app.use(cookieParser());
+
 app.use(session({
     secret: 'your-secret-key',
     resave: false,
@@ -39,17 +44,31 @@ app.use(express.static("public"));
 //app.use(express.static(path.join(__dirname, "js")));
 //app.use('/src',express.static(path.join(__dirname, 'src')));
 
-
 // Serve static images
 app.use('/uploads', express.static(path.join(__dirname, "uploads")));
 
+//Middleware for user login and basic set up
+app.use('/', (req, res, next) => {
+	checkAuthCookie(req);
+	next();
+});
+
 app.get('/login', (req,res) => {
-    if(req.session.user) {
-        res.render('login', {
-            user: req.session.username,
-			profile_pic: req.session.profile_pic
-        });
-    }else {
+    if (req.session.authToken) {
+		const decoded = decodeToken(req.session.authToken);
+		if (decoded) {
+			if (decoded.username) {
+				res.render('login', {
+					user: decoded.username
+				});
+			} else {
+				console.log("The decoded does not contain username!: ", decoded);
+				res.render('login', {
+					username: null
+				});
+			}
+		}
+    } else {
         res.render('login', {
             username: null
         });
@@ -61,17 +80,30 @@ app.get('/signup', (req,res) => {
 });
 
 app.get('/main', (req, res) => {
-    res.render('main', { username: req.session.username, profile_pic: req.session.profile_pic });
-
+	if (req.session.authToken) {
+		const decoded = decodeToken(req.session.authToken);
+		console.log("This is the fetched decoded in main: ", decoded);
+		if (decoded) {
+			res.render('main', { username: decoded.username });
+		} else {
+			console.log("The decoded does not contain username or encounter error, try login again!");
+			res.render('login', {
+				username: null
+			});
+		}
+	} else {
+		res.render('login', { username: null });
+	}
 });
 
 app.get('/about', (req, res) => {
-    res.render('about', { username: req.session.username, profile_pic: req.session.profile_pic });
+	const decoded = decodeToken(req.session.authToken);
+    res.render('about', { username: decoded.username });
 });
 
 app.get('/user', async (req, res) => {
-    const userId = req.session.userId;
-
+	const decoded = await decodeToken(req.session.authToken);
+	const userId = decoded.userId;
     if (!userId) {
         return res.redirect('/login');
     }
@@ -82,8 +114,7 @@ app.get('/user', async (req, res) => {
         //.limit(5); 
 
         res.render('user', {
-            username: req.session.username,
-			profile_pic: req.session.profile_pic,
+            username: decoded.username,
             journalEntries: journalEntries
         });
     } catch (error) {
@@ -94,14 +125,16 @@ app.get('/user', async (req, res) => {
 
 
 app.get('/resources', (req, res) => {
-    res.render('resources', { username: req.session.username });
+	const decoded = decodeToken(req.session.authToken);
+    res.render('resources', { username: decoded.username });
 });
 
 
 app.get('/calendar', async (req, res) => {
-    const userId = req.session.userId;
-
-    if (!userId) {
+	const decoded = await decodeToken(req.session.authToken);
+	const userId = decoded.userId;
+    
+	if (!userId) {
         return res.redirect('/login');
     }
 
@@ -117,7 +150,7 @@ app.get('/calendar', async (req, res) => {
         }));
 
         res.render('calendar', {
-            username: req.session.username,
+            username: decoded.username,
             events: formattedEvents
         });
     } catch (error) {
@@ -126,11 +159,9 @@ app.get('/calendar', async (req, res) => {
     }
 });
 
-
-
 app.get('/journal', async (req, res) => {
-    const userId = req.session.userId;
-
+	const decoded = await decodeToken(req.session.authToken);
+	const userId = decoded.userId;
     if (!userId) {
         return res.redirect('/login');
     }
@@ -141,7 +172,7 @@ app.get('/journal', async (req, res) => {
             .limit(5);
 
         res.render('journal', {
-            username: req.session.username,
+            username: decoded.username,
             journalEntries: journalEntries
         });
     } catch (error) {
@@ -151,29 +182,31 @@ app.get('/journal', async (req, res) => {
 });
 
 app.get('/user-journal', async (req, res) => {
-        const userId = req.session.userId;
+	const decoded = await decodeToken(req.session.authToken);
+	const userId = decoded.userId;    
     
-        if (!userId) {
-            return res.redirect('/login');
-        }
+    if (!userId) {
+        return res.redirect('/login');
+    }
     
-        try {
-            const journalEntries = await Journal.find({ user_id: userId })
-                .sort({ date: -1 })
-                .limit(5);
+    try {
+        const journalEntries = await Journal.find({ user_id: userId })
+		.sort({ date: -1 })
+		.limit(5);
     
-            res.json(journalEntries);
-        } catch (error) {
-            console.error('Error fetching journal entries:', error);
-            res.status(500).json({ error : 'Failed to fetch journal entries'});
-        }    
+		res.json(journalEntries);
+	} catch (error) {
+		console.error('Error fetching journal entries:', error);
+		res.status(500).json({ error : 'Failed to fetch journal entries'});
+	}    
 });
 
 app.post('/journal', async (req, res) => {
     const { title, content, mood, date } = req.body;
-    const userId = req.session.userId;
-
-    if (!userId) {
+	const decoded = await decodeToken(req.session.authToken);
+	const userId = decoded.userId;
+    
+	if (!userId) {
         return res.status(400).send('User not logged in');
     }
     try {
@@ -226,7 +259,8 @@ app.post("/signup", async (req, res) => {
 
 app.post('/calendar', async (req, res) => {
     const { name, date, notes } = req.body;
-    const userId = req.session.userId;
+	 const decoded = await decodeToken(req.session.authToken);
+	const userId = decoded.userId;
 
     if (!userId) {
         return res.status(400).send('User not logged in');
@@ -251,7 +285,8 @@ app.post('/calendar', async (req, res) => {
 });
 
 app.delete('/calendar', async (req, res) => {
-    const userId = req.session.userId;
+	const decoded = await decodeToken(req.session.authToken);
+	const userId = decoded.userId;
     const eventId = req.body.eventId;  // Get the event ID from the request body
 
     if (!userId) {
@@ -292,10 +327,24 @@ app.post("/login", async (req, res) => {
 
         const isPasswordMatch = await bcrypt.compare(req.body.password, check.password);
         if (isPasswordMatch) {
-            req.session.username = check.username;
-            req.session.userId = check._id;
-			      req.session.profile_pic = check.profile_pic;
-            res.status(200).json({success: true, message: 'Login successful!', redirect: '/main'});
+			const remembered = req.body.check; //If the box is checked, the value is on, otherwise it is undefined
+			//console.log("This is the remembered: ", remembered); //Use this to confirm the above statement
+			const token = await createToken({ username: check.username, userId: check._id });
+			if (token) {
+				req.session.authToken = token;
+				if (remembered) {
+					console.log("Setting cookies!");
+					res.cookie("authToken", token, {
+						httpOnly: true, // Prevents JavaScript access (protects from XSS)
+						secure: true, // Ensures the cookie is sent only over HTTPS
+						sameSite: "Strict", // Helps prevent CSRF attacks
+						maxAge: 60 * 60 * 1000 // 1 day expiration
+					});
+			    }
+			    res.status(200).json({success: true, message: 'Login successful!', redirect: '/main'});
+			} else {
+				return res.status(401).json({ error: "Errors creating token!" });;
+			}			
         } else {
             return res.status(401).json({ error: "Incorrect password"});
         }
@@ -308,7 +357,8 @@ app.post("/login", async (req, res) => {
 
 app.post('/change-password', async (req, res) => {
     const newPassword = req.body.newPassword;
-    const userId = req.session.userId;
+    const decoded = await decodeToken(req.session.authToken);
+	const userId = decoded.userId;
 
     if (!userId) {
         return res.status(400).json({ error: 'User not logged in'});
@@ -327,8 +377,7 @@ app.post('/change-password', async (req, res) => {
 
         if (result.modifiedCount === 1) {
             console.log("Password successfully updated!");
-            res.status(200).json({success: "Password successfully updated!"})
-            res.redirect('/user');
+            res.status(200).json({success: "Password successfully updated!", redirect: '/user'});
         } else {
             console.log("Password update failed!");
             res.status(500).json({error: 'Error updating password.'});
@@ -341,7 +390,8 @@ app.post('/change-password', async (req, res) => {
 
 app.post('/change-username', async (req, res) => {
     const newUsername = req.body.newUsername;
-    const userId = req.session.userId;
+    const decoded = await decodeToken(req.session.authToken);
+	const userId = decoded.userId;
 
     if (!userId) {
         return res.status(400).json({error: 'User not logged in'});
@@ -362,7 +412,8 @@ app.post('/change-username', async (req, res) => {
         console.log("Update Result: ", result);
 
         if (result.modifiedCount === 1) {
-            req.session.username = newUsername;
+			const newToken = createToken({ username: newUsername, userId: userId });
+            req.session.authToken = newToken;
             console.log("Username successfully updated!");
             res.redirect('/user');
         } else {
@@ -427,7 +478,6 @@ app.get('/logout', (req, res) => {
         res.redirect('/login');
     });
 });
-
 
 const port = 5001;
 app.listen(port, () => {
