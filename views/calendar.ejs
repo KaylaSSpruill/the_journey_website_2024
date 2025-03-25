@@ -116,6 +116,7 @@
         const day = document.querySelector(".month-dates");
         const current = document.querySelector(".month-name");
         const eventList = document.getElementById("event-list");
+        // const active = date.getMonth();
 
         const months = [
             "January", "February", "March", "April", "May", "June", 
@@ -248,15 +249,15 @@
             let monthcpy = date.getMonth();
             console.log("month: ",monthcpy);
             fetch(`/calendar`)
+                
                 .then(response => response.json())
                 .then(events => {
                     // Clear the current event list
+                    const result = events.filter(filterDisplay);
+                    console.log("what's this: ", result);
                     eventList.innerHTML = '';
-                    let currEvent = event.date.getMonth()
-                    if (firstday) {
-
-                    }
                     events.forEach(event => {
+                        if (!filterDisplay(event)) {
                         const eventElement = createEventDisplay(event);
                         // Append the event element to the event list
                         eventList.appendChild(eventElement);
@@ -266,16 +267,10 @@
                         eventCells.forEach(cell => {
                             cell.classList.add('event-day');
                         });
-                    
+                        }
                     });
                 })
             .catch(error =>{ console.error('Error fetching events:', error);});
-        }
-
-        function filterDisplay(event) {
-            monthcpy = date.getMonth();
-
-
         }
 
         document.querySelectorAll('.event').forEach(div => {
@@ -285,11 +280,16 @@
         });
 
         document.querySelectorAll('.del-button').forEach(button => {
-        button.addEventListener('click', function() {
-            const eventId = this.getAttribute('data-id');
-            deleteEvent(eventId);
+            button.addEventListener('click', function() {
+                const eventId = this.getAttribute('data-id');
+                deleteEvent(eventId);
+            });
         });
-    });
+
+    // filter the display list to only show the active month's events.
+    function filterDisplay(event) {
+        return (event.date.getMonth() == month);
+    }
 
 		//Separate responsibility of the event display so that there will be less coupling issue
 		function createEventDisplay(event) {
