@@ -33,10 +33,6 @@ body {
     color: gray;
 }
 
-.profile-section {
-  display: flex;
-  align-items: center;
-}
 .profile-photo {
   width: 40px;
   height: 40px;
@@ -100,18 +96,11 @@ label, input {
 }
 /* Header styles */
 header {
-    background-color: #404F24;
+    background-color: #404F24; 
     color: #f8f4f4;
     text-align: center;
-    padding: 20px;
-}
-
-.header {
-    background-color: #404F24;
-    color: #fff;
-    padding: 10px;
-    text-align: right;
-    font-size: 1.0em;
+    padding: 20px; 
+    font-family: 'Futura', sans-serif;
 }
 
 /* Navigation menu styles */

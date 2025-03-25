@@ -28,13 +28,7 @@ header {
     padding: 20px; 
     font-family: 'Futura', sans-serif;
 }
-.header {
-    background-color: #404F24;
-    color: #ffff;
-    padding: 10px;
-    text-align: right;
-    font-size: 1.0em;
-}
+
 .float-container {
     padding: 20px;
 }
@@ -262,10 +256,6 @@ footer {
     margin-right: 130px;
 }
 
-.profile-section {
-    display: flex;
-    align-items: center;
-}
 .profile-photo {
     width: 40px;
     height: 40px;
@@ -282,11 +272,6 @@ footer {
 .username-dropdown {
     position: relative;
     display: inline-block;
-}
-
-.username-dropdown span {
-    cursor: pointer;
-    font-weight: bold;
 }
 
 .dropdown-content {
