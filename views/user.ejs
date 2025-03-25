@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Just+Another+Hand&family=Pangolin&family=Sacramento&display=swap" rel="stylesheet">
     <title>User Profile</title> 
     <link rel="stylesheet" href="user.css">
 </head>
@@ -33,14 +36,14 @@
             <form id="usernameForm" action="/change-username" method="POST" style="display:none;">
                 <label for="newUsername">New Username:</label>
                 <input type="text" id="newUsername" name="newUsername" required>
-                <button type="submit">Update Username</button>
+                <button class="submit">Update Username</button>
             </form>
 
             <button onclick="toggleForm('passwordForm')">Change Password</button>
             <form id="passwordForm" action="/change-password" method="POST" style="display:none;">
                 <label for="newPassword">New Password:</label>
                 <input type="password" id="newPassword" name="newPassword" required>
-                <button type="submit">Update Password</button>
+                <button class="submit">Update Password</button>
             </form>
 
             <button><a href="/logout">Logout</a></button>
