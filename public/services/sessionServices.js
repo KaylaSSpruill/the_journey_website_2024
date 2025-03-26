@@ -1,5 +1,7 @@
+import { updateModal, hideModal } from '../components/modal.js';
+
 let sessionTimeout;
-const SESSION_DURATION = 10 * 60 * 1000;
+const SESSION_DURATION = 1 * 1000;
 const USER_CONFIRM_DURATION = 3 * 60 * 1000;
 
 function destroySession() {
@@ -13,13 +15,10 @@ function touchSession() {
 	setSessionTimeout();
 };
 
-export function setSessionTimeout() {
-	['mousemove', 'keydown', 'click'].forEach(e => {
-		window.addEventListener(e, touchSession);
-	});
+function setSessionTimeout() {
 	sessionTimeout = setTimeout(() => {
-		
-	}, SESSION_DURATION); //Sets max timeout to be 10 minutes
+		sessionWarning();
+	}, SESSION_DURATION);
 };
 
 function sessionWarning() {
@@ -44,18 +43,22 @@ function sessionWarning() {
 				listener: extendSession
 			}
 		},
-		closeLogic: {
+		closeLogic: () => {
 			clearTimeout(modalTimeout);
 			destroySession();
 			hideModal();
 		}
 	});
-	
 };
 
 function extendSessionNotice() {
 	updateModal({ message: "Session is extended!", title: "Session Extend Success" });
 };
 
-
+export function initSessionTimeout() {
+	['mousemove', 'keydown', 'click'].forEach(e => {
+		window.addEventListener(e, touchSession);
+	});
+	setSessionTimeout();
+};
 
