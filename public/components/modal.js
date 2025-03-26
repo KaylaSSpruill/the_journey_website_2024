@@ -50,11 +50,36 @@ function createModal() {
     if (!container) {
         container = document.createElement("div");
         container.id = "notification-container";
+		container.style.cssText = `
+			position: fixed; 
+			top: 10px; 
+			width: 440px; 
+			z-index: 1000;
+			display: flex; 
+			justify-content: center; 
+			align-items: center;`;
         document.body.appendChild(container);
     }
 	
 	let modal = document.createElement('div');
 	modal.id = "modal";
+	modal.style.cssText = `
+		display: flex;
+		position: fixed;
+		top: 15%;
+		left: 50%; 
+		transform: translate(-50%, -50%);
+		padding: 10px; 
+		border-radius: 10px; 
+		background-color: #dec4ec;
+		opacity: 0;
+		transition: opacity 0.5s;
+		width: 400px; 
+		align-items: center;
+		justify-content: center;
+		flex-direction: column;
+		margin: 11px;
+		opacity: 1;`;
 	
 	modal.innerHTML = `
 		<h1 class="modal-title"></h1>
