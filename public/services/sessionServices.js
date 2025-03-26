@@ -50,6 +50,7 @@ function sessionWarning() {
 			hideModal();
 		}
 	});
+	
 };
 
 function extendSessionNotice() {

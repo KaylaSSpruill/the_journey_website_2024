@@ -98,6 +98,7 @@ export function updateModal({ message = '', title = '', closeLogic = hideModal, 
 			modalButton1.addEventListener(button1.eventListener.event, button1.eventListener.listner);
 		modalButton2.style.display = "block";
 	}
+	
 	if (button2) {
 		const modalButton2 = document.querySelector('.modal-button-right');
 		if (button2.message) modalButton2.textContent = button2.message;
