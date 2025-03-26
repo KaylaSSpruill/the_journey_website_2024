@@ -1,11 +1,16 @@
 let sessionTimeout;
-
 const SESSION_DURATION = 10 * 60 * 1000;
+const USER_CONFIRM_DURATION = 3 * 60 * 1000;
 
-async function destroySession() {
-	await fetch('logout', {
+function destroySession() {
+	fetch('logout', {
 		method: 'POST', 
 	});
+};
+
+function touchSession() {
+	clearTimeout(sessionTimeout);	
+	setSessionTimeout();
 };
 
 export function setSessionTimeout() {
@@ -13,14 +18,43 @@ export function setSessionTimeout() {
 		window.addEventListener(e, touchSession);
 	});
 	sessionTimeout = setTimeout(() => {
-		/* @todo add the modal notification that if user does not confirm it will log out */
-	destroySession();	
+		
 	}, SESSION_DURATION); //Sets max timeout to be 10 minutes
 };
 
-
-function touchSession() {
-	clearTimeout(sessionTimeout);	
-	setSessionTimeout();
+function sessionWarning() {
+	let modalTimeout = setTimeout(() => {
+			destroySession();
+			hideModal();
+	}, USER_CONFIRM_DURATION);
+	
+	const extendSession = () => {
+		touchSession();
+		clearTimeout(modalTimeout);
+		extendSessionNotice();
+	};
+	
+	updateModal({ 
+		message: "You've been inactive for long, do you want to extend your session?", 
+		title: "Session Time Out", callback: sessionWarning, 
+		button1: { 
+			message: "Extend", 
+			eventListener: {
+				event: 'click',
+				listener: extendSession
+			}
+		},
+		closeLogic: {
+			clearTimeout(modalTimeout);
+			destroySession();
+			hideModal();
+		}
+	});
 };
+
+function extendSessionNotice() {
+	updateModal({ message: "Session is extended!", title: "Session Extend Success" });
+};
+
+
 

@@ -81,11 +81,9 @@ app.get('/main', (req, res) => {
 	if (req.session.authToken) {
 		const decoded = decodeToken(req.session.authToken);
 		if (decoded) {
-			res.render('main', { username: decoded.username });
+			res.render('main');
 		} else {
-			res.render('login', {
-				username: null
-			});
+			res.render('login');
 		}
 	} else {
 		res.render('login', { username: null });
@@ -94,7 +92,7 @@ app.get('/main', (req, res) => {
 
 app.get('/about', (req, res) => {
 	const decoded = decodeToken(req.session.authToken);
-    res.render('about', { username: decoded.username });
+    res.render('about');
 });
 
 app.get('/user', async (req, res) => {
@@ -121,7 +119,7 @@ app.get('/user', async (req, res) => {
 
 app.get('/resources', (req, res) => {
 	const decoded = decodeToken(req.session.authToken);
-    res.render('resources', { username: decoded.username });
+    res.render('resources');
 });
 
 
@@ -204,11 +202,9 @@ app.get('/user-data', async (req, res) => {
 	try {
 		const user = await User.findOne({ _id: userId });
 		if (user) {
-			console.log(user);
 			res.json(user);
 		}	
 	} catch (error) {
-		console.error('Error fetching user data: ', error);
 		res.status(500).json({ error: 'Failed to fetch user' });
 	}
 });
@@ -260,7 +256,7 @@ app.post("/signup", async (req, res) => {
         const userData = new User(data); 
         await userData.save();
     }
-    res.render('main', { username: req.body.username });
+    res.render('main');
 });
 
 app.post('/calendar', async (req, res) => {
@@ -285,7 +281,6 @@ app.post('/calendar', async (req, res) => {
 
         res.json({ success: 'Event created successfully' });
     } catch (error) {
-        console.error('Error saving event:', error);
         res.status(500).json({error: 'Failed to save event'});
     }
 });
@@ -296,11 +291,11 @@ app.delete('/calendar', async (req, res) => {
     const eventId = req.body.eventId;  // Get the event ID from the request body
 
     if (!userId) {
-        return res.status(401).send('User not logged in');  // Ensure the user is logged in
+        return res.status(401).send({ error: 'User not logged in' });  // Ensure the user is logged in
     }
 
     if (!eventId) {
-        return res.status(400).send('Event ID is required');  // Make sure an event ID is provided
+		return res.status(400).send({ error: 'Event ID is required' });  // Make sure an event ID is provided
     }
 
     try {
@@ -308,26 +303,24 @@ app.delete('/calendar', async (req, res) => {
         const event = await Calendar.findOne({ _id: eventId, user_id: userId });
 
         if (!event) {
-            return res.status(404).send('Event not found or does not belong to this user');
+            return res.status(404).send({ error: 'Event not found or does not belong to this user' });
         }
 
         // Delete the event
         await Calendar.findByIdAndDelete(eventId);
 
-        res.json({ success: true, message: 'Event deleted successfully' });  // Send success response
+        res.json({ success: 'Event deleted successfully' });  // Send success response
     } catch (error) {
-        console.error('Error deleting event:', error);
-        res.status(500).send('Failed to delete event');  // Handle any errors
+        res.status(500).send({ error: 'Failed to delete event' });  // Handle any errors
     }
 });
 
 
 app.post("/login", async (req, res) => {
-    console.log("Received login request with:", req.body);
     try {
         const check = await User.findOne({ username: req.body.username });
         if (!check) {
-            return res.status(401).json({error: "Username not found"});
+            return res.status(401).json({ error: "Username not found" });
         }
 
         const isPasswordMatch = await bcrypt.compare(req.body.password, check.password);
@@ -345,7 +338,7 @@ app.post("/login", async (req, res) => {
 						maxAge: 60 * 60 * 1000 // 1 day expiration
 					});
 			    }
-			    res.status(200).json({success: true, message: 'Login successful!', redirect: '/main'});
+			    res.status(200).json({success: 'Login successful!', redirect: '/main'});
 			} else {
 				return res.status(401).json({ error: "Errors creating token!" });;
 			}			
@@ -354,7 +347,6 @@ app.post("/login", async (req, res) => {
         }
 
     } catch (error) {
-        console.error("Error during login:", error); 
         res.status(500).json({ error: "Something went wrong, please try again."});
     }
 });
@@ -376,8 +368,6 @@ app.post('/change-password', async (req, res) => {
             { _id: userId },
             { $set: { password: hashedPassword } }
         );
-
-        console.log("Update Result: ", result);
 
         if (result.modifiedCount === 1) {
             res.status(200).json({ success: "Password successfully updated!", redirect: '/user'});
@@ -469,11 +459,11 @@ app.get('/logout', (req, res) => {
 });
 
 app.post('/logout', (req, res) => {
-	req.session.destroy(err) => {
+	req.session.destroy((err) => {
 		if (err) {
 			res.status(500).send({ error: err });
 		}
-	};
+	});
 });
 
 const port = 5001;
