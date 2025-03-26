@@ -1,6 +1,6 @@
 const express = require('express');
 const path = require("path");
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const session = require('express-session');
 const cookieParser = require('cookie-parser');
 const { User, Journal, Calendar} = require('./config');
@@ -41,7 +41,6 @@ app.use(session({
 app.set('view engine', 'ejs');
 
 app.use(express.static("public"));
-//app.use(express.static(path.join(__dirname, "js")));
 //app.use('/src',express.static(path.join(__dirname, 'src')));
 
 // Serve static images
@@ -62,7 +61,6 @@ app.get('/login', (req,res) => {
 					user: decoded.username
 				});
 			} else {
-				console.log("The decoded does not contain username!: ", decoded);
 				res.render('login', {
 					username: null
 				});
@@ -82,11 +80,9 @@ app.get('/signup', (req,res) => {
 app.get('/main', (req, res) => {
 	if (req.session.authToken) {
 		const decoded = decodeToken(req.session.authToken);
-		console.log("This is the fetched decoded in main: ", decoded);
 		if (decoded) {
 			res.render('main', { username: decoded.username });
 		} else {
-			console.log("The decoded does not contain username or encounter error, try login again!");
 			res.render('login', {
 				username: null
 			});
@@ -117,9 +113,8 @@ app.get('/user', async (req, res) => {
             username: decoded.username,
             journalEntries: journalEntries
         });
-    } catch (error) {
-        console.error('Error fetching journal entries:', error);
-        res.status(500).send('Failed to fetch journal entries');
+    } catch (err) {
+        res.status(500).send({ error: err });
     }
 });
 
@@ -153,9 +148,8 @@ app.get('/calendar', async (req, res) => {
             username: decoded.username,
             events: formattedEvents
         });
-    } catch (error) {
-        console.error('Error fetching events:', error);
-        res.status(500).send('Failed to fetch events');
+    } catch (err) {
+        res.status(500).send({ error: err });
     }
 });
 
@@ -175,9 +169,8 @@ app.get('/journal', async (req, res) => {
             username: decoded.username,
             journalEntries: journalEntries
         });
-    } catch (error) {
-        console.error('Error fetching journal entries:', error);
-        res.status(500).send('Failed to fetch journal entries');
+    } catch (err) {
+        res.status(500).send({ error: err });
     }
 });
 
@@ -196,7 +189,6 @@ app.get('/user-journal', async (req, res) => {
     
 		res.json(journalEntries);
 	} catch (error) {
-		console.error('Error fetching journal entries:', error);
 		res.status(500).json({ error : 'Failed to fetch journal entries'});
 	}    
 });
@@ -207,11 +199,9 @@ app.post('/journal', async (req, res) => {
 	const userId = decoded.userId;
     
 	if (!userId) {
-        return res.status(400).send('User not logged in');
+        return res.status(400).send({ error: 'User not logged in' });
     }
     try {
-        console.log('Received journal entry:', { title, content, mood, date });
-
         const newJournalEntry = new Journal({
             user_id: userId,
             title: title,
@@ -226,8 +216,7 @@ app.post('/journal', async (req, res) => {
 
         res.json({ success: true, journalEntries: journalEntries });
     } catch (error) {
-        console.error('Error saving journal entry:', error);
-        res.status(500).json({error : 'Failed to save journal entry'});
+        res.status(500).json({ error : 'Failed to save journal entry' });
     }
 });
 
@@ -250,10 +239,7 @@ app.post("/signup", async (req, res) => {
 
         const userData = new User(data); 
         await userData.save();
-
-        console.log("User created successfully:", userData);
     }
-
     res.render('main', { username: req.body.username });
 });
 
@@ -277,7 +263,7 @@ app.post('/calendar', async (req, res) => {
 
         await newEvent.save();  // Save event to the database
 
-        res.json({ success: true, message: 'Event created successfully' });
+        res.json({ success: 'Event created successfully' });
     } catch (error) {
         console.error('Error saving event:', error);
         res.status(500).json({error: 'Failed to save event'});
@@ -320,7 +306,6 @@ app.post("/login", async (req, res) => {
     console.log("Received login request with:", req.body);
     try {
         const check = await User.findOne({ username: req.body.username });
-        console.log("Check: ", check);
         if (!check) {
             return res.status(401).json({error: "Username not found"});
         }
@@ -333,7 +318,6 @@ app.post("/login", async (req, res) => {
 			if (token) {
 				req.session.authToken = token;
 				if (remembered) {
-					console.log("Setting cookies!");
 					res.cookie("authToken", token, {
 						httpOnly: true, // Prevents JavaScript access (protects from XSS)
 						secure: true, // Ensures the cookie is sent only over HTTPS
@@ -376,14 +360,11 @@ app.post('/change-password', async (req, res) => {
         console.log("Update Result: ", result);
 
         if (result.modifiedCount === 1) {
-            console.log("Password successfully updated!");
-            res.status(200).json({success: "Password successfully updated!", redirect: '/user'});
+            res.status(200).json({ success: "Password successfully updated!", redirect: '/user'});
         } else {
-            console.log("Password update failed!");
-            res.status(500).json({error: 'Error updating password.'});
+            res.status(500).json({ error: 'Error updating password.'});
         }
     } catch (err) {
-        console.error('Error during password update:', err);
         res.status(500).json({ error: 'Something went wrong, please try again.'});
     }
 });
@@ -394,14 +375,14 @@ app.post('/change-username', async (req, res) => {
 	const userId = decoded.userId;
 
     if (!userId) {
-        return res.status(400).json({error: 'User not logged in'});
+        return res.status(400).json({ error: 'User not logged in' });
     }
 
     try {
         const existingUser = await User.findOne({ username: newUsername });
 
         if (existingUser) {
-            return res.status(400).send("This username is already taken. Please choose a different one.");
+            return res.status(400).send({ error: "This username is already taken. Please choose a different one." });
         }
 
         const result = await User.updateOne(
@@ -409,26 +390,21 @@ app.post('/change-username', async (req, res) => {
             { $set: { username: newUsername } }
         );
 
-        console.log("Update Result: ", result);
-
         if (result.modifiedCount === 1) {
 			const newToken = createToken({ username: newUsername, userId: userId });
             req.session.authToken = newToken;
-            console.log("Username successfully updated!");
             res.redirect('/user');
         } else {
-            console.log("Username update failed!");
-            res.status(500).send('Error updating username.');
+            res.status(500).send({ error: 'Error updating username.' });
         }
     } catch (err) {
-        console.error('Error during username update:', err);
-        res.status(500).send('Something went wrong with username, please try again.');
+        res.status(500).send({ error: err });
     }
 });
 
 app.post('/change-profilepic', upload.single('profile_pic'), async (req, res) => {
 	if (!req.file) {
-        return res.status(400).send("No file uploaded.");
+        return res.status(400).send({ error: "No file uploaded." });
     }
 	const name = req.file.filename; // Assuming multer saves the file path
 	//Now we need to store this in the database
@@ -438,8 +414,7 @@ app.post('/change-profilepic', upload.single('profile_pic'), async (req, res) =>
 	
 	
 	if (!userId) {
-		//Hopefully never reached here because this is fatal error
-		return res.status(400).send("User not logged in.");
+		return res.status(400).send({ error: "User not logged in." });
 	}
 	
 	try {
@@ -450,22 +425,16 @@ app.post('/change-profilepic', upload.single('profile_pic'), async (req, res) =>
 				{ _id: userId },
 				{ $set: { profile_pic: imagePath } }
 			);
-			
-			console.log("Update Result: ", result);
-			
+						
 			if (result.acknowledged) {
 				req.session.profile_pic = imagePath;
-				/** @todo Needs to update cookie as well! Add this after the branches merged together. */
-				console.log("Profile picture successfully updated!");
 				res.redirect('/user');
 			} else {
-				console.log("User profile picture update failed!");
-				res.status(500).send('Error updating username.');
+				res.status(500).send({ error: 'Error updating username.' });
 			}
 		}
 	} catch (err) {
-		console.error("Error during profile picture update: ", err);
-		res.status(500).send("Profile picture update fails, check to see errors and try again");
+		res.status(500).send({ error: "Profile picture update fails, check to see errors and try again" });
 	}
 });
 
@@ -473,10 +442,18 @@ app.post('/change-profilepic', upload.single('profile_pic'), async (req, res) =>
 app.get('/logout', (req, res) => {
     req.session.destroy((err) => {
         if (err) {
-            console.log("Error logging out");
+            res.status(500).send({ error: err });
         }
         res.redirect('/login');
     });
+});
+
+app.post('/logout', (req, res) => {
+	req.session.destroy(err) => {
+		if (err) {
+			res.status(500).send({ error: err });
+		}
+	};
 });
 
 const port = 5001;
