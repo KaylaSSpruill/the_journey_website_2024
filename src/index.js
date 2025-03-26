@@ -44,7 +44,7 @@ app.use(express.static("public"));
 //app.use('/src',express.static(path.join(__dirname, 'src')));
 
 // Serve static images
-app.use('/uploads', express.static(path.join(__dirname, "uploads")));
+app.use('/uploads', express.static("uploads"));
 
 //Middleware for user login and basic set up
 app.use('/', (req, res, next) => {
@@ -191,6 +191,26 @@ app.get('/user-journal', async (req, res) => {
 	} catch (error) {
 		res.status(500).json({ error : 'Failed to fetch journal entries'});
 	}    
+});
+
+app.get('/user-data', async (req, res) => {
+	const decoded = await decodeToken(req.session.authToken);
+	const userId = decoded.userId;
+	
+	 if (!userId) {
+        return res.redirect('/login');
+    }
+	
+	try {
+		const user = await User.findOne({ _id: userId });
+		if (user) {
+			console.log(user);
+			res.json(user);
+		}	
+	} catch (error) {
+		console.error('Error fetching user data: ', error);
+		res.status(500).json({ error: 'Failed to fetch user' });
+	}
 });
 
 app.post('/journal', async (req, res) => {
