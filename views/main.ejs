@@ -5,30 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>The Journey</title>
   <link rel="stylesheet" href="main.css">
- 
+  <script type="module" src="loadElements.js"></script>
 </head>
 <body>
 <header>
-  <% if (typeof username !== 'undefined') { %>
-      <div class="header">
-          <h1 class="title">The Journey</h1>
-          <div class="profile-section">
-              <img src="/images/noprofilephoto.jpg" alt="Profile Photo" class="profile-photo">
-              <div class="username-dropdown">
-                  <span class="profile-name"><%= username %></span>
-                  <div class="dropdown-content">
-                      <p><a href="/user">Profile</a></p>
-                      <p><a href="/user">Settings</a></p>
-                      <p><a href="/logout">Logout</a></p>
-                  </div>
-              </div>
-          </div>
-      </div>
-  <% } else { %>
-      <div class="header">
-          <p><a href="/login">Login</a></p>
-      </div>
-  <% } %>
+	<h1 class="title">The Journey</h1>
+	<div class="header"></div>
 </header>
 
 <div class="container">

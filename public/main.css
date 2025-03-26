@@ -14,65 +14,58 @@ body {
 }
 
 /* Header Styling */
-.header {
-   background-color: #404F24;
-   color: #fff;
-   padding: 20px;
-   text-align: center;
+header {
+    background-color: #404F24; 
+    color: #f8f4f4;
+    text-align: center;
+    padding: 20px; 
+    font-family: 'Futura', sans-serif;
 }
 
-.profile-section {
-  display: flex;
-  align-items: center;
-}
 .profile-photo {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  margin-right: 10px;
-  margin-left: auto;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+    margin-left: auto;
 }
 .profile-name {
-  margin-right: 10px;
-  margin-left: auto;
-  font-weight: bold;
+    margin-right: 10px;
+    margin-left: auto;
+    font-weight: bold;
 }
 
 .username-dropdown {
-  position: relative;
-  display: inline-block;
-}
-
-.username-dropdown span {
-  cursor: pointer;
-  font-weight: bold;
+    position: relative;
+    display: inline-block;
 }
 
 .dropdown-content {
-  display: none;
-  position: absolute;
-  background-color: white;
-  box-shadow: 0px 8px 16px rgba(0,0,0,0.1);
-  min-width: 90px;
-  z-index: 1;
-  font-size: 12px;
-  text-align: center;
+    display: none;
+    position: absolute;
+    background-color: white;
+    box-shadow: 0px 8px 16px rgba(0,0,0,0.1);
+    min-width: 90px;
+    z-index: 1;
+    font-size: 12px;
+    text-align: center;
 }
 
 .username-dropdown:hover .dropdown-content {
-  display: block;
+    display: block;
 }
 
 .dropdown-content a {
-  padding: 8px 10px;
-  display: block;
-  text-decoration: none;
-  color: black;
+    padding: 8px 10px;
+    display: block;
+    text-decoration: none;
+    color: black;
 }
 
 .dropdown-content a:hover {
-  background-color: #f1f1f1;
+    background-color: #f1f1f1;
 }
+
 
 /* Main Container Layout */
 .container {
