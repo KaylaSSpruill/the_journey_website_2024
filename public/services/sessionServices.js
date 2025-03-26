@@ -1,7 +1,7 @@
 import { updateModal, hideModal } from '../components/modal.js';
 
-const SESSION_DURATION = 10 * 60 * 1000;
-const USER_CONFIRM_DURATION = 3 * 60 * 1000;
+const SESSION_DURATION = 10 * 60 * 1000; //Session lasts 10 minutes
+const USER_CONFIRM_DURATION = 3 * 60 * 1000; //User confirm lasts 3 minutes
 
 export function initSessionTimeout() {
 	let sessionTimeout; 
@@ -40,8 +40,8 @@ export function initSessionTimeout() {
 			},
 			closeLogic: () => {
 				clearTimeout(modalTimeout);
-				destroySession();
 				hideModal();
+				destroySession();
 			}
 		});
 	}
@@ -69,6 +69,7 @@ export function initSessionTimeout() {
 		updateModal({ message: "Session is extended!", title: "Session Extend Success" });
 	}
 	
+	//Attach global event listeners to refresh session
 	['mousemove', 'keydown', 'click'].forEach(e => {
 		window.addEventListener(e, touchSession);
 	});
