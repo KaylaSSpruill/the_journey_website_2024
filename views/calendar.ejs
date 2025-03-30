@@ -246,18 +246,14 @@
         
         //display events: need to fix displaying past events
         function displayEvents() {
-            let monthcpy = date.getMonth();
-            console.log("month: ",monthcpy);
             fetch(`/calendar`)
-                
                 .then(response => response.json())
                 .then(events => {
                     // Clear the current event list
                     const result = events.filter(filterDisplay);
-                    console.log("what's this: ", result);
+                    console.log("filtered events:  ", result);
                     eventList.innerHTML = '';
-                    events.forEach(event => {
-                        if (!filterDisplay(event)) {
+                    result.forEach(event => {
                         const eventElement = createEventDisplay(event);
                         // Append the event element to the event list
                         eventList.appendChild(eventElement);
@@ -267,7 +263,7 @@
                         eventCells.forEach(cell => {
                             cell.classList.add('event-day');
                         });
-                        }
+                        
                     });
                 })
             .catch(error =>{ console.error('Error fetching events:', error);});
@@ -288,7 +284,7 @@
 
     // filter the display list to only show the active month's events.
     function filterDisplay(event) {
-        return (event.date.getMonth() == month);
+        return new Date(event.date).getMonth() === date.getMonth();
     }
 
 		//Separate responsibility of the event display so that there will be less coupling issue

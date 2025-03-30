@@ -91,6 +91,11 @@ app.get('/resources', (req, res) => {
 
 
 app.get('/calendar', async (req, res) => {
+
+    const now = new Date();  // Current date
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);  // 1st day of current month
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999); // Last day of month
+
     const userId = req.session.userId;
 
     if (!userId) {
@@ -98,7 +103,7 @@ app.get('/calendar', async (req, res) => {
     }
 
     try {
-        const events = await Calendar.find({ user_id: userId })
+        const events = await Calendar.find({ user_id: userId, date: { $gte: startOfMonth, $lte: endOfMonth } })
             .sort({ date: -1 })
             .limit(5);
 
@@ -117,7 +122,6 @@ app.get('/calendar', async (req, res) => {
         res.status(500).send('Failed to fetch events');
     }
 });
-
 
 
 app.get('/journal', async (req, res) => {
