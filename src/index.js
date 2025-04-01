@@ -345,7 +345,6 @@ app.post("/login", async (req, res) => {
         } else {
             return res.status(401).json({ error: "Incorrect password"});
         }
-
     } catch (error) {
         res.status(500).json({ error: "Something went wrong, please try again."});
     }
