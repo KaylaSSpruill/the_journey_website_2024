@@ -256,7 +256,7 @@ app.post("/signup", async (req, res) => {
         const userData = new User(data); 
         await userData.save();
     }
-    res.render('main');
+    res.redirect('login');
 });
 
 app.post('/calendar', async (req, res) => {
