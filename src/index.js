@@ -1,12 +1,11 @@
 const express = require('express');
-const path = require("path");
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
 const session = require('express-session');
 const cookieParser = require('cookie-parser');
-const { User, Journal, Calendar} = require('./config');
+const { User, Journal, Calendar } = require('./config');
 const bodyParser = require('body-parser');
 const multer = require('multer');
-const { checkAuthCookie } = require('./controllers/cookieControllers.js');
+const { checkAuthCookie, cleanAuthCookie } = require('./controllers/cookieControllers.js');
 const { createToken, decodeToken } = require('./controllers/jwtControllers.js');
 
 const app = express();
@@ -48,6 +47,7 @@ app.use('/uploads', express.static("uploads"));
 
 //Middleware for user login and basic set up
 app.use('/', (req, res, next) => {
+    cleanAuthCookie(req, res);
 	checkAuthCookie(req);
 	next();
 });
@@ -417,7 +417,6 @@ app.post('/change-profilepic', upload.single('profile_pic'), async (req, res) =>
     }
 	const name = req.file.filename; // Assuming multer saves the file path
 	//Now we need to store this in the database
-    /** @todo This needs to be removed later, should dynamically construct the image path and only save the name of the file */ 
 	const imagePath = `http://localhost:5001/uploads/${name}`; //
 	const userId = req.session.userId;
 	
