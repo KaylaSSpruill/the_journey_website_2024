@@ -91,11 +91,6 @@ app.get('/resources', (req, res) => {
 
 
 app.get('/calendar', async (req, res) => {
-
-    const now = new Date();  // Current date
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);  // 1st day of current month
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999); // Last day of month
-
     const userId = req.session.userId;
 
     if (!userId) {
@@ -103,7 +98,7 @@ app.get('/calendar', async (req, res) => {
     }
 
     try {
-        const events = await Calendar.find({ user_id: userId, date: { $gte: startOfMonth, $lte: endOfMonth } })
+        const events = await Calendar.find({ user_id: userId})
             .sort({ date: -1 })
             .limit(5);
 
@@ -123,6 +118,44 @@ app.get('/calendar', async (req, res) => {
     }
 });
 
+
+
+app.get('/user-calendar', async (req, res) => {
+
+    const now = new Date();  // Current date
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);  // 1st day of current month
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999); // Last day of month
+
+    const userId = req.session.userId;
+
+    if (!userId) {
+        return res.redirect('/login');
+    }
+
+    try {
+        const events = await Calendar.find({ 
+            user_id: userId, 
+            date: { $gte: startOfMonth, $lte: endOfMonth } 
+            })
+            .sort({ date: -1 })
+            .limit(5);
+
+        // Convert event dates to 'YYYY-MM-DD' format for easier comparison in the frontend
+        const formattedEvents = events.map(event => ({
+            ...res.json(event.toObject()),
+            date: event.date.toISOString().split('T')[0]  // Convert to 'YYYY-MM-DD' format
+        }));
+
+        //res.json(formattedEvents);
+        res.render('calendar', {
+            username: req.session.username,
+            events: formattedEvents
+        });
+    } catch (error) {
+        console.error('Error fetching events:', error);
+        res.status(500).send('Failed to fetch events');
+    }
+});
 
 app.get('/journal', async (req, res) => {
     const userId = req.session.userId;

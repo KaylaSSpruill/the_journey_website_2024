@@ -116,7 +116,8 @@
         const day = document.querySelector(".month-dates");
         const current = document.querySelector(".month-name");
         const eventList = document.getElementById("event-list");
-        // const active = date.getMonth();
+        let ID = [];
+        let monthcpy = 0;
 
         const months = [
             "January", "February", "March", "April", "May", "June", 
@@ -125,7 +126,6 @@
 
         // Array to store events
         const events = [];
-
         const generate = () => {
             const firstday = new Date(year, month, 1).getDay();
             const lastday = new Date(year, month + 1, 0).getDate();
@@ -166,6 +166,7 @@
         // Handle Previous month navigation
         document.getElementById('prev-month').addEventListener('click', () => {
             month--;
+            monthcpy = month;
             if (month < 0) {
                 month = 11;
                 year--;
@@ -177,6 +178,7 @@
         //handle next month navigation
         document.getElementById('next-month').addEventListener('click', () => {
             month++;
+            monthcpy = month;
             if (month > 11) {
                 month = 0;
                 year++;
@@ -209,7 +211,8 @@
 
             // Add event to the events array
             events.push(event);
-           
+    
+           console.log(events);
 
             // Display event under the form
             const eventElement = createEventDisplay(event);
@@ -243,17 +246,26 @@
             document.getElementById("notes").value = "";
         });
 
-        
         //display events: need to fix displaying past events
         function displayEvents() {
-            fetch(`/calendar`)
-                .then(response => response.json())
+            fetch(`/calendar`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+                .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                } 
+                console.log
+                return response.json();
+            })
                 .then(events => {
                     // Clear the current event list
-                    const result = events.filter(filterDisplay);
-                    console.log("filtered events:  ", result);
                     eventList.innerHTML = '';
-                    result.forEach(event => {
+                    events.forEach(event => {
+                        filterDisplay(event);
                         const eventElement = createEventDisplay(event);
                         // Append the event element to the event list
                         eventList.appendChild(eventElement);
@@ -269,6 +281,7 @@
             .catch(error =>{ console.error('Error fetching events:', error);});
         }
 
+        //console.log("what: ", events);
         document.querySelectorAll('.event').forEach(div => {
             div.addEventListener("click", function() {
                 HighlightE(event);
@@ -278,6 +291,7 @@
         document.querySelectorAll('.del-button').forEach(button => {
             button.addEventListener('click', function() {
                 const eventId = this.getAttribute('data-id');
+                ID.push(eventId);
                 deleteEvent(eventId);
             });
         });
@@ -301,6 +315,12 @@
 		  eventElement.append(event.notes);
 		  const horizontalBreak = document.createElement("hr");
 		  eventElement.appendChild(horizontalBreak);
+          const delButton = document.createElement("button");
+          delButton.textContent = "Delete";
+         delButton.classList.add('del-button');
+         delButton.setAttribute('data-id', event._id); // Assuming MongoDB ObjectId
+            // Append delete button to event element
+            eventElement.appendChild(delButton);
 		  return eventElement;
 		}
 
