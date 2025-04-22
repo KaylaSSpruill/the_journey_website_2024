@@ -17,14 +17,6 @@ header {
 
 }
 
-.header {
-  background-color: #404F24;
-  color: #ffff;
-  padding: 10px;
-  text-align: right;
-  font-size: 1.0em;
-}
-
 nav {
   background-color: #668d3C;
   color: #f8f4f4;
@@ -112,10 +104,6 @@ footer {
   position: relative;
 }
 
-.profile-section {
-  display: flex;
-  align-items: center;
-}
 .profile-photo {
   width: 40px;
   height: 40px;

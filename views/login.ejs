@@ -63,11 +63,9 @@
             } else {
                 const errMessage = data.error || "An unknown error has occured. Please try again"
                 showPopup(errMessage, 'error');
-                console.log('error: ', errMessage);
             }
         })
         .catch(error => {
-            console.error("Login error:", error);
             showPopup("An error occured, please try again.", 'error');
         });
           document.getElementById("username").value = "";
