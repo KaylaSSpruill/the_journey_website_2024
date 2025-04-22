@@ -45,6 +45,13 @@
                 <input type="password" id="newPassword" name="newPassword" required>
                 <button class="submit">Update Password</button>
             </form>
+			
+			<button onclick="toggleForm('profilepicForm')">Change Profile Picture</button>
+			<form id="profilepicForm" action="/change-profilepic" method="POST" enctype="multipart/form-data" style="display:none;">
+				<label for="newProfilePic">New Profile Pic: </label>
+				<input type="file" id="newProfilePic" name="profile_pic" required>
+				<button type="submit">Update ProfilePic</button>
+			</form>
 
             <button><a href="/logout">Logout</a></button>
         </div>

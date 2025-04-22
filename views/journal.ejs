@@ -5,29 +5,14 @@
     <title>The Journey</title>
     <link rel="stylesheet" href="journal.css">
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+	<script type="module" src="loadElements.js"></script>
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 
-    <script src="journal.js"></script> 
 </head>
 <body>
     <header>
-        <% if (typeof username !== 'undefined') { %>
-            <div class="header">
-                <h1 class="title">Journal</h1>
-                <img src="/images/noprofilephoto.jpg" alt="Profile Photo" class="profile-photo">
-                <div class="username-dropdown">
-                    <span class="profile-name"><%= username %></span>
-                    <div class="dropdown-content">
-                        <p><a href="/user">Profile</a></p>
-    
-                    </div>
-                </div>
-            </div>
-        <% } else { %>
-            <div class="header">
-            <p><a href="/login">Login</a></p>
-            </div>
-        <% } %>
+		<h1 class="title">Journal</h1>
+        <div class="header"></div>
     </header>
     <nav>
         <ul>
@@ -126,7 +111,8 @@
                 mood: mood,
                 date: date
             };
-    
+    	    
+	    
             fetch('/journal', {
                 method: 'POST',
                 headers: {
@@ -149,24 +135,41 @@
             });
         };
     
+
         function displayEntries() {
             fetch('/user-journal') 
             .then(response => response.json())
             .then(entries => {
                 const entriesContainer = document.querySelector('.entries-container');
                 entriesContainer.innerHTML = '';
-
+				//Sort through the entries based on date, from most recent to oldest
+				entries.sort(compareDate);
                 const limitedEntries = entries.slice(0, 5);
 
                 if (limitedEntries.length > 0) {
                     limitedEntries.forEach(entry => {
                         const entryDiv = document.createElement('div');
                         entryDiv.classList.add('entry');
-                        entryDiv.innerHTML = `
-                            <h3>${entry.title}</h3>
-                            <p>${entry.content.substring(0, 100)}...</p>
-                            <p>Mood: ${entry.mood} | Date: ${new Date(entry.date).toLocaleDateString()}</p>
-                        `;
+						//Create child elements so that the content is appended instead of directly injected
+						//This prevents potential XMS injection
+						const styleLine = document.createElement('p');
+						styleLine.append('---------------------------------------------------------');
+						entryDiv.append(styleLine);
+                        const title = document.createElement('h3');
+						title.append(entry.title);
+						entryDiv.appendChild(title);
+						const content = document.createElement('p');
+						//Since the content is appended using quill.innerHTML
+						//Kept to innerHTML, however there are still ways to work around this
+						content.innerHTML = entry.content.substring(0, 100);
+						const mood = document.createElement('p');
+						const date = new Date(entry.date).toISOString().split('T')[0];
+						console.log(date);
+						const moodText = `Mood: ${entry.mood} | Date: ${date}`;
+						mood.append(moodText);
+						entryDiv.appendChild(content);
+						entryDiv.appendChild(mood);
+						//Append everything to the container
                         entriesContainer.appendChild(entryDiv);
                     });
                 } else {
@@ -174,7 +177,14 @@
                 }
             })
             .catch(error => console.error('Error fetching journal entries:', error));
-        }
+        };
+		//Sorting function
+		function compareDate(a, b) {
+		  const firstDate = new Date(a.date);
+		  const secondDate = new Date(b.date);
+		  const result = (a < b) ? 1 : (a > b) ? -1 : 0;
+		  return result;
+		};
 
         document.querySelectorAll('.del-button').forEach(button => {
         button.addEventListener('click', function() {

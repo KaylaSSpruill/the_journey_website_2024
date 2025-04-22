@@ -33,6 +33,55 @@ body {
     color: gray;
 }
 
+.profile-photo {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 10px;
+  margin-left: auto;
+}
+.profile-name {
+  margin-right: 10px;
+  margin-left: auto;
+  font-weight: bold;
+}
+
+.username-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.username-dropdown span {
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: white;
+  box-shadow: 0px 8px 16px rgba(0,0,0,0.1);
+  min-width: 90px;
+  z-index: 1;
+  font-size: 12px;
+  text-align: center;
+}
+
+.username-dropdown:hover .dropdown-content {
+  display: block;
+}
+
+.dropdown-content a {
+  padding: 8px 10px;
+  display: block;
+  text-decoration: none;
+  color: black;
+}
+
+.dropdown-content a:hover {
+  background-color: #f1f1f1;
+}
+
 hr {
     color:#BDD09F;
     box-shadow: 1px 1px 1px black;
@@ -47,18 +96,11 @@ label, input {
 }
 /* Header styles */
 header {
-    background-color: #404F24;
+    background-color: #404F24; 
     color: #f8f4f4;
     text-align: center;
-    padding: 20px;
-}
-
-.header {
-    background-color: #404F24;
-    color: #fff;
-    padding: 10px;
-    text-align: right;
-    font-size: 1.0em;
+    padding: 20px; 
+    font-family: 'Futura', sans-serif;
 }
 
 /* Navigation menu styles */

@@ -2,22 +2,16 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Calendar</title>
     <link rel="stylesheet" href="/calendar.css">
-    
+    <link rel="stylesheet" href="/notify.css">
+    <title>Calendar</title>
+    <script src="notification.js"></script>
+	<script type="module" src="loadElements.js"></script>
 </head>
 <body>
     <header>
-        <h1>Calendar</h1>
-        <% if (typeof username !== 'undefined') { %>
-            <div class="header">
-                <a href="/user"><p>Go to, <%= username %>'s Profile!</p></a>
-            </div>
-        <% } else { %>
-            <div class="header">
-                <p><a href="/login">Login</a></p>
-            </div>
-        <% } %>
+        <h1 class="title">Calendar</h1>
+        <div class="header"></div>
     </header>
 
     <nav>
@@ -99,7 +93,6 @@
     </footer>
 
     <script>
-        console.log("Calendar script loaded");
         let date = new Date();
         let year = date.getFullYear();
         let month = date.getMonth();
@@ -199,8 +192,7 @@
            
 
             // Display event under the form
-            const eventElement = document.createElement("div");
-            eventElement.innerHTML = `<strong>${event.name}</strong> (${event.date})<br>${event.notes}<hr>`;
+            const eventElement = createEventDisplay(event);
             eventList.appendChild(eventElement);
 
             HighlightE(event);
@@ -215,7 +207,8 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert('Event created successfully');
+                    // alert('Event created successfully');
+                    showPopup('Event created successfully', 'success');
                 } else {
                     console.error('Error creating event:', data.message);
                 }
@@ -240,12 +233,7 @@
                 eventList.innerHTML = '';
                 
                 events.forEach(event => {
-                    // Create the event element (using textContent to avoid HTML injection)
-                    const eventElement = document.createElement("div");
-
-                    eventElement.classList.add('event'); // Optional: add a class for styling
-                    eventElement.innerHTML = `<strong>${event.name}</strong> (${event.date})<br>${event.notes}<hr>`;
-
+                    const eventElement = createEventDisplay(event);
                     // Append the event element to the event list
                     eventList.appendChild(eventElement);
 
@@ -262,8 +250,8 @@
 
         document.querySelectorAll('.event').forEach(div => {
             div.addEventListener("click", function() {
-                        HighlightE(event);
-                });
+                HighlightE(event);
+            });
         });
 
         document.querySelectorAll('.del-button').forEach(button => {
@@ -272,30 +260,46 @@
             deleteEvent(eventId);
         });
     });
+		//Separate responsibility of the event display so that there will be less coupling issue
+		function createEventDisplay(event) {
+		  console.log("This is the event:", event);
+		  const eventElement = document.createElement("div");
+          	  eventElement.classList.add('event'); // Optional: add a class for styling
+		  const eventName = document.createElement('strong');
+		  eventName.append(event.name);
+		  eventElement.appendChild(eventName);
+		  eventElement.append(` (${event.date})`);
+		  const linebreak = document.createElement("br");
+		  eventElement.appendChild(linebreak);
+		  eventElement.append(event.notes);
+		  const horizontalBreak = document.createElement("hr");
+		  eventElement.appendChild(horizontalBreak);
+		  return eventElement;
+		}
 
         // Delete event function
         function deleteEvent(eventId) {
-        fetch('/calendar', {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ eventId: eventId })  // Send the eventId in the request body
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert(data.message);  // Show success message
-                // Remove the event element from the DOM
-                document.querySelector(`.event[data-id='${eventId}']`).remove();
-            } else {
-                alert('Failed to delete event');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error deleting event');
-        });
+            fetch('/calendar', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ eventId: eventId })  // Send the eventId in the request body
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showPopup('Event deleted successfully', 'success');  // Show success message
+                    // Remove the event element from the DOM
+                    document.querySelector(`.event[data-id='${eventId}']`).remove();
+                } else {
+                    alert('Failed to delete event');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error deleting event');
+            });
     }
 
     generate();
