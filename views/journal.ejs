@@ -64,12 +64,13 @@
             <h2>Your Journal Entries</h2>
             <% if (journalEntries && journalEntries.length > 0) { %>
                 <div class="entries-container">
-                    <% journalEntries.forEach(entry => { %>
-                        <div class="entry">
+                    <% journalEntries.forEach(function(entry) { %>
+                        <div class="entry" data-id="<%= entry._id %>">
                             <p>---------------------------------------------------------</p>
                             <h3><%= entry.title %></h3>
                             <p><%- entry.content.substring(0, 20) %>...</p>
                             <p>Mood: <%= entry.mood %> | Date: <%= entry.date.toISOString().split('T')[0] %></p>
+                            <button class="del-button" data-id="<%= entry._id %>">Delete</button>
                         </div>
                     <% }); %>
                  </div>
@@ -184,6 +185,38 @@
 		  const result = (a < b) ? 1 : (a > b) ? -1 : 0;
 		  return result;
 		};
+
+        document.querySelectorAll('.del-button').forEach(button => {
+        button.addEventListener('click', function() {
+            const entryId = this.getAttribute('data-id');
+            deleteEntry(entryId);
+            });
+        });
+
+        function deleteEntry(entryId) {
+        fetch('/journal', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({entryId: entryId})
+        }) 
+        .then(response => response.json())
+        .then(data => {
+            if (data.success){
+                alert(data.message);
+                document.querySelector(`.entry[data-id='${entryId}']`).remove();
+            } else {
+                alert('Failed to delete entry');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error deleting entry');
+        }); 
+        }
+
+
 
     </script>    
     
