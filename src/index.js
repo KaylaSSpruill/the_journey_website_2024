@@ -157,8 +157,8 @@ app.get('/calendar/events', async (req, res) => {
     const now = new Date();  // Current date
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);  // 1st day of current month
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999); // Last day of month
-
-    const userId = req.session.userId;
+    const decoded = await decodeToken(req.session.authToken);
+    const userId = decoded.userId;
 
     if (!userId) {
         return res.redirect('/login');

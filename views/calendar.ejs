@@ -247,11 +247,15 @@
                 .then(events => {
                     // Clear the current event list
                     eventList.innerHTML = '';
-                    console.log("what", events);
+                    console.log("current events:", events);
                     events.forEach(event => {
                         const eventElement = createEventDisplay(event);
                         // Append the event element to the event list
                         eventList.appendChild(eventElement);
+                        const delButton = eventElement.querySelector('.del-button');
+                        delButton.addEventListener('click', () => {
+                            deleteEvent(event._id, eventElement);
+                        });
                         // Highlight the event date on the calendar
                         const eventDay = new Date(event.date).getDate();
                         const eventCells = document.querySelectorAll(`[data-day='${eventDay}']`);
@@ -264,20 +268,20 @@
             .catch(error =>{ console.error('Error fetching events:', error);});
         }
 
-        //console.log("what: ", events);
+
         document.querySelectorAll('.event').forEach(div => {
             div.addEventListener("click", function() {
                 HighlightE(event);
             });
         });
 
-        document.querySelectorAll('.del-button').forEach(button => {
-            button.addEventListener('click', function() {
-                const eventId = this.getAttribute('data-id');
-                ID.push(eventId);
-                deleteEvent(eventId);
-            });
-        });
+        // document.querySelectorAll('.del-button').forEach(button => {
+        //     button.addEventListener('click', function() {
+        //         const eventId = this.getAttribute('data-id');
+        //         ID.push(eventId);
+        //         deleteEvent(eventId);
+        //     });
+        // });
 
 
 		//Separate responsibility of the event display so that there will be less coupling issue
@@ -304,8 +308,8 @@
 		}
 
         // Delete event function
-        function deleteEvent(eventId) {
-            fetch('/calendar/events', {
+        function deleteEvent(eventId, eventElem) {
+            fetch('/calendar', {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
@@ -317,7 +321,7 @@
                 if (data.success) {
                     showPopup('Event deleted successfully', 'success');  // Show success message
                     // Remove the event element from the DOM
-                    document.querySelector(`.event[data-id='${eventId}']`).remove();
+                    eventElem.remove()
                 } else {
                     alert('Failed to delete event');
                 }
