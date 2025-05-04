@@ -96,9 +96,12 @@
         let date = new Date();
         let year = date.getFullYear();
         let month = date.getMonth();
+        let firstday= new Date(year, month, 0);
         const day = document.querySelector(".month-dates");
         const current = document.querySelector(".month-name");
         const eventList = document.getElementById("event-list");
+        let ID = [];
+        let monthcpy = 0;
 
         const months = [
             "January", "February", "March", "April", "May", "June", 
@@ -107,7 +110,6 @@
 
         // Array to store events
         const events = [];
-
         const generate = () => {
             const firstday = new Date(year, month, 1).getDay();
             const lastday = new Date(year, month + 1, 0).getDate();
@@ -145,9 +147,10 @@
             displayEvents();
         };
 
-        // Handle Previous/Next month navigation
+        // Handle Previous month navigation
         document.getElementById('prev-month').addEventListener('click', () => {
             month--;
+            monthcpy = month;
             if (month < 0) {
                 month = 11;
                 year--;
@@ -156,8 +159,10 @@
             displayEvents();
         });
 
+        //handle next month navigation
         document.getElementById('next-month').addEventListener('click', () => {
             month++;
+            monthcpy = month;
             if (month > 11) {
                 month = 0;
                 year++;
@@ -166,6 +171,7 @@
             displayEvents();
         });
 
+        //Highlight event days: currently not working
         function HighlightE(event) {
             const dateE = event.date.split("-");
             const newDate = dateE[2];
@@ -189,7 +195,8 @@
 
             // Add event to the events array
             events.push(event);
-           
+    
+           console.log(events);
 
             // Display event under the form
             const eventElement = createEventDisplay(event);
@@ -223,30 +230,44 @@
             document.getElementById("notes").value = "";
         });
 
-        
-
+        //display events: need to fix displaying past events
         function displayEvents() {
-        fetch(`/calendar`)
-            .then(response => response.json())
-            .then(events => {
-                // Clear the current event list
-                eventList.innerHTML = '';
-                
-                events.forEach(event => {
-                    const eventElement = createEventDisplay(event);
-                    // Append the event element to the event list
-                    eventList.appendChild(eventElement);
-
-                    // Highlight the event date on the calendar
-                    const eventDay = new Date(event.date).getDate();
-                    const eventCells = document.querySelectorAll(`[data-day='${eventDay}']`);
-                    eventCells.forEach(cell => {
-                        cell.classList.add('event-day');
-                    });
-                });
+            fetch(`/calendar/events`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
             })
-            .catch(error =>{ console.error('Error fetching events:', error)});
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                } 
+                return response.json();
+            })
+                .then(events => {
+                    // Clear the current event list
+                    eventList.innerHTML = '';
+                    console.log("current events:", events);
+                    events.forEach(event => {
+                        const eventElement = createEventDisplay(event);
+                        // Append the event element to the event list
+                        eventList.appendChild(eventElement);
+                        const delButton = eventElement.querySelector('.del-button');
+                        delButton.addEventListener('click', () => {
+                            deleteEvent(event._id, eventElement);
+                        });
+                        // Highlight the event date on the calendar
+                        const eventDay = new Date(event.date).getDate();
+                        const eventCells = document.querySelectorAll(`[data-day='${eventDay}']`);
+                        eventCells.forEach(cell => {
+                            cell.classList.add('event-day');
+                        });
+                    
+                    });
+                })
+            .catch(error =>{ console.error('Error fetching events:', error);});
         }
+
 
         document.querySelectorAll('.event').forEach(div => {
             div.addEventListener("click", function() {
@@ -254,12 +275,15 @@
             });
         });
 
-        document.querySelectorAll('.del-button').forEach(button => {
-        button.addEventListener('click', function() {
-            const eventId = this.getAttribute('data-id');
-            deleteEvent(eventId);
-        });
-    });
+        // document.querySelectorAll('.del-button').forEach(button => {
+        //     button.addEventListener('click', function() {
+        //         const eventId = this.getAttribute('data-id');
+        //         ID.push(eventId);
+        //         deleteEvent(eventId);
+        //     });
+        // });
+
+
 		//Separate responsibility of the event display so that there will be less coupling issue
 		function createEventDisplay(event) {
 		  console.log("This is the event:", event);
@@ -274,11 +298,17 @@
 		  eventElement.append(event.notes);
 		  const horizontalBreak = document.createElement("hr");
 		  eventElement.appendChild(horizontalBreak);
+          const delButton = document.createElement("button");
+          delButton.textContent = "Delete";
+         delButton.classList.add('del-button');
+         delButton.setAttribute('data-id', event._id); // Assuming MongoDB ObjectId
+            // Append delete button to event element
+            eventElement.appendChild(delButton);
 		  return eventElement;
 		}
 
         // Delete event function
-        function deleteEvent(eventId) {
+        function deleteEvent(eventId, eventElem) {
             fetch('/calendar', {
                 method: 'DELETE',
                 headers: {
@@ -291,7 +321,7 @@
                 if (data.success) {
                     showPopup('Event deleted successfully', 'success');  // Show success message
                     // Remove the event element from the DOM
-                    document.querySelector(`.event[data-id='${eventId}']`).remove();
+                    eventElem.remove()
                 } else {
                     alert('Failed to delete event');
                 }

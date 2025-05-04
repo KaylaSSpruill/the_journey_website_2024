@@ -132,7 +132,7 @@ app.get('/calendar', async (req, res) => {
     }
 
     try {
-        const events = await Calendar.find({ user_id: userId })
+        const events = await Calendar.find({ user_id: userId})
             .sort({ date: -1 })
             .limit(5);
 
@@ -141,7 +141,7 @@ app.get('/calendar', async (req, res) => {
             ...event.toObject(),
             date: event.date.toISOString().split('T')[0]  // Convert to 'YYYY-MM-DD' format
         }));
-
+        
         res.render('calendar', {
             username: decoded.username,
             events: formattedEvents
@@ -150,6 +150,41 @@ app.get('/calendar', async (req, res) => {
         res.status(500).send({ error: err });
     }
 });
+
+
+
+app.get('/calendar/events', async (req, res) => {
+    const now = new Date();  // Current date
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);  // 1st day of current month
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999); // Last day of month
+    const decoded = await decodeToken(req.session.authToken);
+    const userId = decoded.userId;
+
+    if (!userId) {
+        return res.redirect('/login');
+    }
+
+    try {
+        const events = await Calendar.find({ 
+            user_id: userId, 
+            date: { $gte: startOfMonth, $lte: endOfMonth } 
+        })
+        .sort({ date: -1 })
+        .limit(5);
+
+        const formattedEvents = events.map(event => {
+            const obj = event.toObject();
+            obj.date = event.date.toISOString().split('T')[0];
+            return obj;
+        });
+
+        res.json(formattedEvents);
+    } catch (error) {
+        console.error('Error fetching events:', error);
+        res.status(500).send('Failed to fetch events');
+    }
+});
+
 
 app.get('/journal', async (req, res) => {
 	const decoded = await decodeToken(req.session.authToken);
