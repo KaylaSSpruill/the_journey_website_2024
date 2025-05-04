@@ -12,99 +12,106 @@ body {
    flex-direction: column;
    height: 100%;
 }
-
+.sacramento-regular {
+   font-family: "Sacramento", cursive;
+   font-weight: 400;
+   font-style: normal;
+ }
 /* Header Styling */
 .header {
    background-color: #404F24;
    color: #fff;
    padding: 20px;
    text-align: center;
+   font-size: 20px;
+}
+
+.title {
+   font-family: "Sacramento", cursive;
+   color:beige;
+   font-size: 60px;
 }
 
 .profile-section {
-  display: flex;
-  align-items: center;
+   display: flex;
+   align-items: center;
+   justify-content: flex-end;
 }
+
 .profile-photo {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  margin-right: 10px;
-  margin-left: auto;
-}
-.profile-name {
-  margin-right: 10px;
-  margin-left: auto;
-  font-weight: bold;
+   width: 40px;
+   height: 40px;
+   border-radius: 50%;
+   margin-right: 20px;
 }
 
 .username-dropdown {
-  position: relative;
-  display: inline-block;
+   position: relaive;
 }
 
-.username-dropdown span {
-  cursor: pointer;
-  font-weight: bold;
-}
-
-.dropdown-content {
-  display: none;
-  position: absolute;
-  background-color: white;
-  box-shadow: 0px 8px 16px rgba(0,0,0,0.1);
-  min-width: 90px;
-  z-index: 1;
-  font-size: 12px;
-  text-align: center;
+.username-dropdown .dropdown-content {
+   display: none;
+   position: relaive;
+   background-color: white;
+   box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.1);
+   min-width: 100px;
+   z-index: 10;
 }
 
 .username-dropdown:hover .dropdown-content {
-  display: block;
+    display: block;
 }
 
 .dropdown-content a {
-  padding: 8px 10px;
-  display: block;
-  text-decoration: none;
-  color: black;
+    padding: 8px 10px;
+    display: block;
+    text-decoration: none;
+    color: black;
 }
 
 .dropdown-content a:hover {
-  background-color: #f1f1f1;
+    background-color: #f1f1f1;
 }
+
 
 /* Main Container Layout */
 .container {
-   display: flex;
-   flex-grow: 1;
+   /* display: flex; */
+   /*flex-grow: 1; */
 }
 
 /* Navigation Menu */
 nav {
    background-color: #668D3C; 
-   width: 300px;
+   width: 100%; 
    color: #fff;
-   padding: 20px;
-   height: inherit;
+   padding: 10px;
+   height: inherit;  
+
 }
 
 nav ul {
    list-style: none;
+   
 }
 
 nav ul li {
-   margin-bottom: 20px;
+   margin: 0%;
+   display: inline-block;
+   word-spacing: 100%;
+   margin-right: 20px;
 }
 
 nav ul li a {
    text-decoration: none;
    color: #fff;
    transition: color 0.3s;
+   text-align: center;
 }
 
 nav ul li a:hover {
    color: #ccc;
+   word-spacing: 100%;
 }
 
 /* Main Content */
