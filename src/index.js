@@ -1,13 +1,26 @@
 const express = require('express');
-const path = require("path");
 const bcrypt = require('bcrypt');
 const session = require('express-session');
 const cookieParser = require('cookie-parser');
-const { User, Journal, Calendar} = require('./config');
+const { User, Journal, Calendar } = require('./config');
 const bodyParser = require('body-parser');
-const { checkAuthCookie } = require('./controllers/cookieControllers.js');
+const multer = require('multer');
+const { checkAuthCookie, cleanAuthCookie } = require('./controllers/cookieControllers.js');
+const { createToken, decodeToken } = require('./controllers/jwtControllers.js');
 
 const app = express();
+
+//Storage for image upload
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'uploads/')
+    },
+    filename: function (req, file, cb) {
+        cb(null, file.originalname)
+    }
+});
+
+const upload = multer({ storage: storage });
 
 app.use(express.json());
 
@@ -27,21 +40,32 @@ app.use(session({
 app.set('view engine', 'ejs');
 
 app.use(express.static("public"));
-//app.use(express.static(path.join(__dirname, "js")));
 //app.use('/src',express.static(path.join(__dirname, 'src')));
 
+// Serve static images
+app.use('/uploads', express.static("uploads"));
 
 //Middleware for user login and basic set up
 app.use('/', (req, res, next) => {
+    cleanAuthCookie(req, res);
 	checkAuthCookie(req);
 	next();
 });
 
 app.get('/login', (req,res) => {
-    if (req.session.username) {
-        res.render('login', {
-            user: req.session.username
-        });
+    if (req.session.authToken) {
+		const decoded = decodeToken(req.session.authToken);
+		if (decoded) {
+			if (decoded.username) {
+				res.render('login', {
+					user: decoded.username
+				});
+			} else {
+				res.render('login', {
+					username: null
+				});
+			}
+		}
     } else {
         res.render('login', {
             username: null
@@ -54,17 +78,26 @@ app.get('/signup', (req,res) => {
 });
 
 app.get('/main', (req, res) => {
-    res.render('main', { username: req.session.username });
-
+	if (req.session.authToken) {
+		const decoded = decodeToken(req.session.authToken);
+		if (decoded) {
+			res.render('main');
+		} else {
+			res.render('login');
+		}
+	} else {
+		res.render('login', { username: null });
+	}
 });
 
 app.get('/about', (req, res) => {
-    res.render('about', { username: req.session.username });
+	const decoded = decodeToken(req.session.authToken);
+    res.render('about');
 });
 
 app.get('/user', async (req, res) => {
-    const userId = req.session.userId;
-
+	const decoded = await decodeToken(req.session.authToken);
+	const userId = decoded.userId;
     if (!userId) {
         return res.redirect('/login');
     }
@@ -75,25 +108,26 @@ app.get('/user', async (req, res) => {
         //.limit(5); 
 
         res.render('user', {
-            username: req.session.username,
+            username: decoded.username,
             journalEntries: journalEntries
         });
-    } catch (error) {
-        console.error('Error fetching journal entries:', error);
-        res.status(500).send('Failed to fetch journal entries');
+    } catch (err) {
+        res.status(500).send({ error: err });
     }
 });
 
 
 app.get('/resources', (req, res) => {
-    res.render('resources', { username: req.session.username });
+	const decoded = decodeToken(req.session.authToken);
+    res.render('resources');
 });
 
 
 app.get('/calendar', async (req, res) => {
-    const userId = req.session.userId;
-
-    if (!userId) {
+	const decoded = await decodeToken(req.session.authToken);
+	const userId = decoded.userId;
+    
+	if (!userId) {
         return res.redirect('/login');
     }
 
@@ -109,20 +143,17 @@ app.get('/calendar', async (req, res) => {
         }));
 
         res.render('calendar', {
-            username: req.session.username,
+            username: decoded.username,
             events: formattedEvents
         });
-    } catch (error) {
-        console.error('Error fetching events:', error);
-        res.status(500).send('Failed to fetch events');
+    } catch (err) {
+        res.status(500).send({ error: err });
     }
 });
 
-
-
 app.get('/journal', async (req, res) => {
-    const userId = req.session.userId;
-
+	const decoded = await decodeToken(req.session.authToken);
+	const userId = decoded.userId;
     if (!userId) {
         return res.redirect('/login');
     }
@@ -133,44 +164,60 @@ app.get('/journal', async (req, res) => {
             .limit(5);
 
         res.render('journal', {
-            username: req.session.username,
+            username: decoded.username,
             journalEntries: journalEntries
         });
-    } catch (error) {
-        console.error('Error fetching journal entries:', error);
-        res.status(500).send('Failed to fetch journal entries');
+    } catch (err) {
+        res.status(500).send({ error: err });
     }
 });
 
 app.get('/user-journal', async (req, res) => {
-        const userId = req.session.userId;
+	const decoded = await decodeToken(req.session.authToken);
+	const userId = decoded.userId;    
     
-        if (!userId) {
-            return res.redirect('/login');
-        }
+    if (!userId) {
+        return res.redirect('/login');
+    }
     
-        try {
-            const journalEntries = await Journal.find({ user_id: userId })
-                .sort({ date: -1 })
-                .limit(5);
+    try {
+        const journalEntries = await Journal.find({ user_id: userId })
+		.sort({ date: -1 })
+		.limit(5);
     
-            res.json(journalEntries);
-        } catch (error) {
-            console.error('Error fetching journal entries:', error);
-            res.status(500).json({ error : 'Failed to fetch journal entries'});
-        }    
+		res.json(journalEntries);
+	} catch (error) {
+		res.status(500).json({ error : 'Failed to fetch journal entries'});
+	}    
+});
+
+app.get('/user-data', async (req, res) => {
+	const decoded = await decodeToken(req.session.authToken);
+	const userId = decoded.userId;
+	
+	 if (!userId) {
+        return res.redirect('/login');
+    }
+	
+	try {
+		const user = await User.findOne({ _id: userId });
+		if (user) {
+			res.json(user);
+		}	
+	} catch (error) {
+		res.status(500).json({ error: 'Failed to fetch user' });
+	}
 });
 
 app.post('/journal', async (req, res) => {
     const { title, content, mood, date } = req.body;
-    const userId = req.session.userId;
-
-    if (!userId) {
-        return res.status(400).send('User not logged in');
+	const decoded = await decodeToken(req.session.authToken);
+	const userId = decoded.userId;
+    
+	if (!userId) {
+        return res.status(400).send({ error: 'User not logged in' });
     }
     try {
-        console.log('Received journal entry:', { title, content, mood, date });
-
         const newJournalEntry = new Journal({
             user_id: userId,
             title: title,
@@ -185,8 +232,7 @@ app.post('/journal', async (req, res) => {
 
         res.json({ success: true, journalEntries: journalEntries });
     } catch (error) {
-        console.error('Error saving journal entry:', error);
-        res.status(500).json({error : 'Failed to save journal entry'});
+        res.status(500).json({ error : 'Failed to save journal entry' });
     }
 });
 
@@ -209,16 +255,14 @@ app.post("/signup", async (req, res) => {
 
         const userData = new User(data); 
         await userData.save();
-
-        console.log("User created successfully:", userData);
     }
-
-    res.render('main', { username: req.body.username });
+    res.redirect('login');
 });
 
 app.post('/calendar', async (req, res) => {
     const { name, date, notes } = req.body;
-    const userId = req.session.userId;
+	 const decoded = await decodeToken(req.session.authToken);
+	const userId = decoded.userId;
 
     if (!userId) {
         return res.status(400).send('User not logged in');
@@ -235,23 +279,23 @@ app.post('/calendar', async (req, res) => {
 
         await newEvent.save();  // Save event to the database
 
-        res.json({ success: true, message: 'Event created successfully' });
+        res.json({ success: 'Event created successfully' });
     } catch (error) {
-        console.error('Error saving event:', error);
         res.status(500).json({error: 'Failed to save event'});
     }
 });
 
 app.delete('/calendar', async (req, res) => {
-    const userId = req.session.userId;
+	const decoded = await decodeToken(req.session.authToken);
+	const userId = decoded.userId;
     const eventId = req.body.eventId;  // Get the event ID from the request body
 
     if (!userId) {
-        return res.status(401).send('User not logged in');  // Ensure the user is logged in
+        return res.status(401).send({ error: 'User not logged in' });  // Ensure the user is logged in
     }
 
     if (!eventId) {
-        return res.status(400).send('Event ID is required');  // Make sure an event ID is provided
+		return res.status(400).send({ error: 'Event ID is required' });  // Make sure an event ID is provided
     }
 
     try {
@@ -259,65 +303,84 @@ app.delete('/calendar', async (req, res) => {
         const event = await Calendar.findOne({ _id: eventId, user_id: userId });
 
         if (!event) {
-            return res.status(404).send('Event not found or does not belong to this user');
+            return res.status(404).send({ error: 'Event not found or does not belong to this user' });
         }
 
         // Delete the event
         await Calendar.findByIdAndDelete(eventId);
 
-        res.json({ success: true, message: 'Event deleted successfully' });  // Send success response
+        res.json({ success: 'Event deleted successfully' });  // Send success response
     } catch (error) {
-        console.error('Error deleting event:', error);
-        res.status(500).send('Failed to delete event');  // Handle any errors
+        res.status(500).send({ error: 'Failed to delete event' });  // Handle any errors
     }
+});
+
+app.delete('/journal', async (req, res) => {
+    const userId = req.session.userId;
+    const entryId = req.body.entryId;
+
+    if(!userId) {
+        return res.status(401).send('User not logged in');
+    }
+
+    if(!entryId){
+        return res.status(400).send('Entry ID is required');
+    }
+
+    try{
+        const entry = await Journal.findOne({_id: entryId, user_id: userId});
+
+        if(!entry){
+            return res.status(404).send('Entry not found or does not belong to this user');
+        }
+
+        res.json({ success: true, message: 'Entry deleted successfully'});
+    } catch (error){
+        console.error('Error deleting entry:', error);
+        res.status(500).send('Failed to delete entry');
+    }
+    
 });
 
 
 app.post("/login", async (req, res) => {
-    console.log("Received login request with:", req.body);
     try {
         const check = await User.findOne({ username: req.body.username });
-        console.log("Check: ", check);
         if (!check) {
-            return res.status(401).json({error: "Username not found"});
+            return res.status(401).json({ error: "Username not found" });
         }
 
         const isPasswordMatch = await bcrypt.compare(req.body.password, check.password);
         if (isPasswordMatch) {
 			const remembered = req.body.check; //If the box is checked, the value is on, otherwise it is undefined
-			console.log("This is the remembered: ", remembered); //Use this to confirm the above statement
-			req.session.username = check.username;
-            req.session.userId = check._id;			
-			  if (remembered) {
-				//When switch to JWT token, replace the username with the actual JWT token
-				console.log("Setting cookies!");
-				res.cookie("username", check.username, {
-					httpOnly: true, // Prevents JavaScript access (protects from XSS)
-					secure: true, // Ensures the cookie is sent only over HTTPS
-					sameSite: "Strict", // Helps prevent CSRF attacks
-					maxAge: 60 * 60 * 1000 // 1 day expiration
-				});
-				res.cookie("userId", check._id, {
-					httpOnly: true, // Prevents JavaScript access (protects from XSS)
-					secure: true, // Ensures the cookie is sent only over HTTPS
-					sameSite: "Strict", // Helps prevent CSRF attacks
-					maxAge: 60 * 60 * 1000 // 1 day expiration
-				});
+			//console.log("This is the remembered: ", remembered); //Use this to confirm the above statement
+			const token = await createToken({ username: check.username, userId: check._id });
+			if (token) {
+				req.session.authToken = token;
+				if (remembered) {
+					res.cookie("authToken", token, {
+						httpOnly: true, // Prevents JavaScript access (protects from XSS)
+						secure: true, // Ensures the cookie is sent only over HTTPS
+						sameSite: "Strict", // Helps prevent CSRF attacks
+						maxAge: 60 * 60 * 1000 // 1 day expiration
+					});
 			    }
-			    res.status(200).json({success: true, message: 'Login successful!', redirect: '/main'});
+			    res.status(200).json({success: 'Login successful!', redirect: '/main'});
+			} else {
+				return res.status(401).json({ error: "Errors creating token!" });;
+			}			
         } else {
             return res.status(401).json({ error: "Incorrect password"});
         }
-
     } catch (error) {
-        console.error("Error during login:", error); 
         res.status(500).json({ error: "Something went wrong, please try again."});
     }
 });
 
 app.post('/change-password', async (req, res) => {
     const newPassword = req.body.newPassword;
-    const userId = req.session.userId;
+    const decoded = await decodeToken(req.session.authToken);
+	const userId = decoded.userId;
 
     if (!userId) {
         return res.status(400).json({ error: 'User not logged in'});
@@ -332,35 +395,30 @@ app.post('/change-password', async (req, res) => {
             { $set: { password: hashedPassword } }
         );
 
-        console.log("Update Result: ", result);
-
         if (result.modifiedCount === 1) {
-            console.log("Password successfully updated!");
-            res.status(200).json({success: "Password successfully updated!"})
-            res.redirect('/user');
+            res.status(200).json({ success: "Password successfully updated!", redirect: '/user'});
         } else {
-            console.log("Password update failed!");
-            res.status(500).json({error: 'Error updating password.'});
+            res.status(500).json({ error: 'Error updating password.'});
         }
     } catch (err) {
-        console.error('Error during password update:', err);
         res.status(500).json({ error: 'Something went wrong, please try again.'});
     }
 });
 
 app.post('/change-username', async (req, res) => {
     const newUsername = req.body.newUsername;
-    const userId = req.session.userId;
+    const decoded = await decodeToken(req.session.authToken);
+	const userId = decoded.userId;
 
     if (!userId) {
-        return res.status(400).json({error: 'User not logged in'});
+        return res.status(400).json({ error: 'User not logged in' });
     }
 
     try {
         const existingUser = await User.findOne({ username: newUsername });
 
         if (existingUser) {
-            return res.status(400).send("This username is already taken. Please choose a different one.");
+            return res.status(400).send({ error: "This username is already taken. Please choose a different one." });
         }
 
         const result = await User.updateOne(
@@ -368,34 +426,72 @@ app.post('/change-username', async (req, res) => {
             { $set: { username: newUsername } }
         );
 
-        console.log("Update Result: ", result);
-
         if (result.modifiedCount === 1) {
-            req.session.username = newUsername;
-            console.log("Username successfully updated!");
+			const newToken = createToken({ username: newUsername, userId: userId });
+            req.session.authToken = newToken;
             res.redirect('/user');
         } else {
-            console.log("Username update failed!");
-            res.status(500).send('Error updating username.');
+            res.status(500).send({ error: 'Error updating username.' });
         }
     } catch (err) {
-        console.error('Error during username update:', err);
-        res.status(500).send('Something went wrong with username, please try again.');
+        res.status(500).send({ error: err });
     }
 });
 
+app.post('/change-profilepic', upload.single('profile_pic'), async (req, res) => {
+	if (!req.file) {
+        return res.status(400).send({ error: "No file uploaded." });
+    }
+	const name = req.file.filename; // Assuming multer saves the file path
+	//Now we need to store this in the database
+	const imagePath = `http://localhost:5001/uploads/${name}`; //
+	const userId = req.session.userId;
+	
+	
+	if (!userId) {
+		return res.status(400).send({ error: "User not logged in." });
+	}
+	
+	try {
+		const existingUser = await User.findOne({ _id: userId });
+		
+		if (existingUser) {
+			const result = await User.updateOne(
+				{ _id: userId },
+				{ $set: { profile_pic: imagePath } }
+			);
+						
+			if (result.acknowledged) {
+				req.session.profile_pic = imagePath;
+				res.redirect('/user');
+			} else {
+				res.status(500).send({ error: 'Error updating username.' });
+			}
+		}
+	} catch (err) {
+		res.status(500).send({ error: "Profile picture update fails, check to see errors and try again" });
+	}
+});
 
-app.get('/logout', (req, res) => {	
+
+app.get('/logout', (req, res) => {
     req.session.destroy((err) => {
         if (err) {
-            console.log("Error logging out");
+            res.status(500).send({ error: err });
         }
         res.redirect('/login');
     });
 });
 
+app.post('/logout', (req, res) => {
+	req.session.destroy((err) => {
+		if (err) {
+			res.status(500).send({ error: err });
+		}
+	});
+});
 
 const port = 5001;
 app.listen(port, () => {
     console.log(`Server running on Port: ${port}`);
-})
+});

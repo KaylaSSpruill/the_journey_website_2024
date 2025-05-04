@@ -6,32 +6,16 @@
     <link rel="stylesheet" href="/notify.css">
     <title>Calendar</title>
     <script src="notification.js"></script>
+	<script type="module" src="loadElements.js"></script>
 </head>
 <body>
     <header>
-        <h1>Calendar</h1>
-        <% if (typeof username !== 'undefined') { %>
-            <div class="header">
-                <img src="/images/noprofilephoto.jpg" alt="Profile Photo" class="profile-photo">
-                <div class="username-dropdown">
-                    <span class="profile-name"><%= username %></span>
-                    <div class="dropdown-content">
-                        <p><a href="/user">Profile</a></p>
-                        <p><a href="/user">Settings</a></p>
-                        <p><a href="/logout">Logout</a></p>
-    
-                    </div>
-                </div>
-            </div>
-        <% } else { %>
-            <div class="header">
-            <p><a href="/login">Login</a></p>
-            </div>
-        <% } %>
+        <h1 class="title">Calendar</h1>
+        <div class="header"></div>
     </header>
 
     <nav>
-        <ul>
+        <ul class="nav">
             <li><a href="/main">Home</a></li> 
             <li><a href="/resources">Resources</a></li>
             <li><a href="/calendar">Calendar</a></li>
@@ -318,9 +302,9 @@
             });
     }
 
-        generate();
+    generate();
     
-        displayEvents();
+    displayEvents();
     </script> 
 </body>
 </html>
