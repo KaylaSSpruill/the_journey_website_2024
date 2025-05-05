@@ -480,7 +480,8 @@ app.post('/change-profilepic', upload.single('profile_pic'), async (req, res) =>
     }
 	const name = req.file.filename; // Assuming multer saves the file path
 	//Now we need to store this in the database
-	const imagePath = `http://localhost:5001/uploads/${name}`; //
+    const BASE_URL = "https://the-journey-website-2024.onrender.com";
+	const imagePath = `${BASE_URL}/uploads/${name}`; //
     const decoded = await decodeToken(req.session.authToken);
 	const userId = decoded.userId;	
 	
