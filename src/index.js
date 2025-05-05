@@ -260,12 +260,9 @@ app.post('/journal', async (req, res) => {
             mood: mood,
             date: date,
         });
+        console.log(newJournalEntry);
         await newJournalEntry.save();
-        const journalEntries = await Journal.find({ user_id: userId })
-            .sort({ date: -1 })
-            .limit(5);
-
-        res.json({ success: true, journalEntries: journalEntries });
+        res.status(200).json({success: true});
     } catch (error) {
         res.status(500).json({ error : 'Failed to save journal entry' });
     }
@@ -321,8 +318,8 @@ app.post('/calendar', async (req, res) => {
 });
 
 app.delete('/calendar', async (req, res) => {
-	const decoded = await decodeToken(req.session.authToken);
-	const userId = decoded.userId;
+    const decoded = await decodeToken(req.session.authToken);
+    const userId = decoded.userId;
     const eventId = req.body.eventId;  // Get the event ID from the request body
 
     if (!userId) {
@@ -351,7 +348,8 @@ app.delete('/calendar', async (req, res) => {
 });
 
 app.delete('/journal', async (req, res) => {
-    const userId = req.session.userId;
+    const decoded = await decodeToken(req.session.authToken);
+    const userId = decoded.userId;
     const entryId = req.body.entryId;
 
     if(!userId) {
@@ -368,6 +366,9 @@ app.delete('/journal', async (req, res) => {
         if(!entry){
             return res.status(404).send('Entry not found or does not belong to this user');
         }
+
+	// Delete the event
+        await Journal.findByIdAndDelete(entryId);
 
         res.json({ success: true, message: 'Entry deleted successfully'});
     } catch (error){
@@ -480,8 +481,8 @@ app.post('/change-profilepic', upload.single('profile_pic'), async (req, res) =>
 	const name = req.file.filename; // Assuming multer saves the file path
 	//Now we need to store this in the database
 	const imagePath = `http://localhost:5001/uploads/${name}`; //
-	const userId = req.session.userId;
-	
+    const decoded = await decodeToken(req.session.authToken);
+	const userId = decoded.userId;	
 	
 	if (!userId) {
 		return res.status(400).send({ error: "User not logged in." });

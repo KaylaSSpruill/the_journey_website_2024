@@ -1,7 +1,7 @@
 import { updateModal, hideModal } from '../components/modal.js';
 
-const SESSION_DURATION = 10 * 60 * 1000; //Session lasts 10 minutes
-const USER_CONFIRM_DURATION = 3 * 60 * 1000; //User confirm lasts 3 minutes
+const SESSION_DURATION = 15 * 1000; //Session lasts 1 minutes
+const USER_CONFIRM_DURATION = 10 * 1000; //User confirm lasts 1 minutes
 
 export function initSessionTimeout() {
 	let sessionTimeout; 
@@ -30,7 +30,7 @@ export function initSessionTimeout() {
 		
 		updateModal({ 
 			message: "You've been inactive, do you want to extend your session?", 
-			title: "Session Time Out", callback: sessionWarning, 
+			title: "Session Time Out", 
 			button1: { 
 				message: "Extend", 
 				eventListener: {
@@ -44,10 +44,11 @@ export function initSessionTimeout() {
 				destroySession();
 			}
 		});
+		
 	}
 	
 	function touchSession() {
-		if (!warning) {
+		if (!warning && now - lastActivity > 10000) {
 			clearTimeout(sessionTimeout);	
 			setSessionTimeout();
 		}
@@ -59,8 +60,8 @@ export function initSessionTimeout() {
 		}, SESSION_DURATION);
 	}
 	
-	function destroySession() {
-		fetch('logout', {
+	async function destroySession() {
+		await fetch('logout', {
 			method: 'POST', 
 		});
 	}
