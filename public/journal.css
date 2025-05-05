@@ -16,7 +16,7 @@ body, h1, h2, p, ul, li {
 
 body {
     background-color: #404F24;
-    font-family: 'Futura', sans-serif;
+    font-family: 'Arsenal SC', sans-serif;
     background-image: url('images/Background.jpg');
 }
 
@@ -26,7 +26,7 @@ header {
     color: #f8f4f4;
     text-align: center;
     padding: 20px; 
-    font-family: 'Futura', sans-serif;
+    font-family: 'Arsenal SC', sans-serif;
 }
 
 .float-container {
@@ -71,7 +71,7 @@ h2{
 nav {
     background-color: #668D3C; 
     padding: 10px;
-    font-family: 'Futura', sans-serif;
+    font-family: 'Arsenal SC', sans-serif;
     ;
 }
 
@@ -120,7 +120,7 @@ form {
     width: 100px;
     text-align: right;
     font-weight: bold;
-    font-family: 'Futura', sans-serif;
+    font-family: 'Arsenal SC', sans-serif;
 }
 
 button {
@@ -133,7 +133,7 @@ button {
     background-color: #f8f4f4;
     color: #404F24;
     font-weight: bold;
-    font-family: 'Futura', sans-serif;;
+    font-family: 'Arsenal SC', sans-serif;;
 }   
 
 #form-title {
@@ -159,7 +159,7 @@ button {
 .journal-entry-title {
     font-weight: bold;
     font-size: medium;
-    font-family: 'Futura', sans-serif;
+    font-family: 'Arsenal SC', sans-serif;
     white-space: nowrap;
     padding: auto;
     overflow: hidden;
@@ -175,7 +175,7 @@ button {
 
 
 .journal-entry-content {
-    font-family: 'Futura', sans-serif;
+    font-family: 'Arsenal SC', sans-serif;
     padding: auto;
     font-size: small;
     white-space: nowrap;
