@@ -1,7 +1,7 @@
 import { updateModal, hideModal } from '../components/modal.js';
 
-const SESSION_DURATION = 15 * 1000; //Session lasts 1 minutes
-const USER_CONFIRM_DURATION = 10 * 1000; //User confirm lasts 1 minutes
+const SESSION_DURATION = 2 * 60 * 1000; //Session lasts 2 minutes
+const USER_CONFIRM_DURATION = 3 * 60 * 1000; //User confirm lasts 3 minutes
 
 export function initSessionTimeout() {
 	let sessionTimeout; 
@@ -48,7 +48,7 @@ export function initSessionTimeout() {
 	}
 	
 	function touchSession() {
-		if (!warning && now - lastActivity > 10000) {
+		if (!warning) {
 			clearTimeout(sessionTimeout);	
 			setSessionTimeout();
 		}
