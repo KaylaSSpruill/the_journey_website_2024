@@ -1,5 +1,5 @@
 const express = require('express');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const session = require('express-session');
 const cookieParser = require('cookie-parser');
 const { User, Journal, Calendar } = require('./config');
@@ -260,12 +260,9 @@ app.post('/journal', async (req, res) => {
             mood: mood,
             date: date,
         });
+        console.log(newJournalEntry);
         await newJournalEntry.save();
-        const journalEntries = await Journal.find({ user_id: userId })
-            .sort({ date: -1 })
-            .limit(5);
-
-        res.json({ success: true, journalEntries: journalEntries });
+        res.status(200).json({success: true});
     } catch (error) {
         res.status(500).json({ error : 'Failed to save journal entry' });
     }
@@ -484,8 +481,8 @@ app.post('/change-profilepic', upload.single('profile_pic'), async (req, res) =>
 	const name = req.file.filename; // Assuming multer saves the file path
 	//Now we need to store this in the database
 	const imagePath = `http://localhost:5001/uploads/${name}`; //
-	const userId = req.session.userId;
-	
+    const decoded = await decodeToken(req.session.authToken);
+	const userId = decoded.userId;	
 	
 	if (!userId) {
 		return res.status(400).send({ error: "User not logged in." });

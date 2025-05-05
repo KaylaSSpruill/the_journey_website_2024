@@ -24,7 +24,7 @@
             </div>
             <div class="input-box">
                 <input type="password" id="password" name="password" class="input-field" placeholder="Password" autocomplete="off" 
-                pattern="(?=.*\d) (?=.[a-z]) (?=.*[A-Z]) .{8,}" title="Must contain at least one number and one uppercase and lowercase letter, and at least 8 or more characters." required>
+                pattern="(?=.*\d)(?=.[a-z])(?=.*[A-Z]).{8,}" title="Must contain at least one number and one uppercase and lowercase letter, and at least 8 or more characters." required>
             </div>
             <br>
 
@@ -58,10 +58,9 @@ myInput.onkeyup = function() {
   // Validate lowercase letters
   var lowerCaseLetters = /[a-z]/g;
   if(myInput.value.match(lowerCaseLetters)) {
-    letter.classList.remove("invalid");
-    letter.classList.add("valid");
+    letter.classList.replace("invalid", "valid");
   } else {
-    letter.classList.remove("valid");
+    letter.classList.replace("valid", "invalid");
     letter.classList.add("invalid");
 }
 
@@ -77,30 +76,24 @@ myInput.onblur = function() {
   // Validate capital letters
   var upperCaseLetters = /[A-Z]/g;
   if(myInput.value.match(upperCaseLetters)) {
-    capital.classList.remove("invalid");
-    capital.classList.add("valid");
+    capital.classList.replace("invalid", "valid");
   } else {
-    capital.classList.remove("valid");
-    capital.classList.add("invalid");
+    capital.classList.replace("valid", "invalid");
   }
 
   // Validate numbers
   var numbers = /[0-9]/g;
   if(myInput.value.match(numbers)) {
-    number.classList.remove("invalid");
-    number.classList.add("valid");
+    number.classList.replace("invalid", "valid");
   } else {
-    number.classList.remove("valid");
-    number.classList.add("invalid");
+    number.classList.replace("valid", "invalid");
   }
 
   // Validate length
   if(myInput.value.length >= 8) {
-    length.classList.remove("invalid");
-    length.classList.add("valid");
+    length.classList.replace("invalid", "valid");
   } else {
-    length.classList.remove("valid");
-    length.classList.add("invalid");
+    length.classList.replace("valid", "invalid");
   }
 }
 </script>

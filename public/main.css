@@ -32,53 +32,51 @@ body {
    font-size: 60px;
 }
 
-.profile-section {
-   display: flex;
-   align-items: center;
-   justify-content: flex-end;
-}
-
 .profile-photo {
    width: 40px;
    height: 40px;
    border-radius: 50%;
-   margin-right: 20px;
+   margin-right: 10px;
+   margin-left: auto;
+}
+.profile-name {
+   margin-right: 10px;
+   margin-left: auto;
+   font-weight: bold;
 }
 
 .username-dropdown {
-   position: relaive;
+   position: relative;
+   display: inline-block;
 }
 
-.username-dropdown .dropdown-content {
+.dropdown-content {
    display: none;
-   position: relaive;
+   position: absolute;
    background-color: white;
-   box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.1);
-   min-width: 100px;
-   z-index: 10;
+   box-shadow: 0px 8px 16px rgba(0,0,0,0.1);
+   min-width: 90px;
+   z-index: 1;
+   font-size: 12px;
+   text-align: center;
 }
 
 .username-dropdown:hover .dropdown-content {
-    display: block;
+   display: block;
 }
 
 .dropdown-content a {
-    padding: 8px 10px;
-    display: block;
-    text-decoration: none;
-    color: black;
+   padding: 8px 10px;
+   display: block;
+   text-decoration: none;
+   color: black;
 }
 
 .dropdown-content a:hover {
-    background-color: #f1f1f1;
+   background-color: #f1f1f1;
 }
-
 
 /* Main Container Layout */
-.container {
-   /* display: flex; */
-   /*flex-grow: 1; */
-}
 
 /* Navigation Menu */
 nav {
