@@ -5,7 +5,7 @@ body, h1, h2, p, ul, li {
 
 body {
   background-image: url('images/Background.jpg');
-  font-family: 'Futura', sans-serif;
+  font-family: 'Arsenal SC', sans-serif;
 }
 
 header {
@@ -13,7 +13,7 @@ header {
   color: #f8f4f4;
   text-align: center;
   padding: 20px;
-  font-family: 'Futura', sans-serif;
+  font-family: 'Arsenal SC', sans-serif;
 
 }
 
@@ -21,10 +21,10 @@ nav {
   background-color: #668d3C;
   color: #f8f4f4;
   padding: 10px;
-  font-family: 'Futura', sans-serif;
+  font-family: 'Arsenal SC', sans-serif;
 }
 button{
-  font-family: 'Futura', sans-serif;
+  font-family: 'Arsenal SC', sans-serif;
   background-color:#f8f4f4;
 }
 
