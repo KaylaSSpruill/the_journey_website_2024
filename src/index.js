@@ -370,6 +370,9 @@ app.delete('/journal', async (req, res) => {
             return res.status(404).send('Entry not found or does not belong to this user');
         }
 
+	// Delete the event
+        await Journal.findByIdAndDelete(entryId);
+
         res.json({ success: true, message: 'Entry deleted successfully'});
     } catch (error){
         console.error('Error deleting entry:', error);
