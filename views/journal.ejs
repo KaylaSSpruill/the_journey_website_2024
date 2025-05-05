@@ -28,7 +28,7 @@
             <div id="journal-entry-form">
                 <h2 id="form-title">Create a New Journal Entry</h2>
                 <br>
-                <form action="/journal" method="post" class="new">
+                <form class="new">
                     <br>
                     <label for="title" class="label-heading" id="title">Title:</label>
                     <br>
@@ -62,8 +62,8 @@
         </div>
         <div class="float-left">
             <h2>Your Journal Entries</h2>
+            <div class="entries-container">
             <% if (journalEntries && journalEntries.length > 0) { %>
-                <div class="entries-container">
                     <% journalEntries.forEach(function(entry) { %>
                         <div class="entry" data-id="<%= entry._id %>">
                             <p>---------------------------------------------------------</p>
@@ -73,10 +73,10 @@
                             <button class="del-button" data-id="<%= entry._id %>">Delete</button>
                         </div>
                     <% }); %>
-                 </div>
             <% } else { %>
                 <p>No journal entries found. Start writing today!</p>
             <% } %>
+            </div>
         </div>
     </div>
     <script>
@@ -150,6 +150,8 @@
                     limitedEntries.forEach(entry => {
                         const entryDiv = document.createElement('div');
                         entryDiv.classList.add('entry');
+                        entryDiv.setAttribute('data-id', entry._id);
+
 						//Create child elements so that the content is appended instead of directly injected
 						//This prevents potential XMS injection
 						const styleLine = document.createElement('p');
@@ -169,6 +171,15 @@
 						mood.append(moodText);
 						entryDiv.appendChild(content);
 						entryDiv.appendChild(mood);
+                        const delButton = document.createElement('button');
+                        delButton.className = 'del-button';
+                        delButton.textContent = 'Delete';
+                        delButton.setAttribute('data-id', entry._id);
+                        delButton.addEventListener('click', function () {
+                            deleteEntry(entry._id);
+                        });
+                        entryDiv.appendChild(delButton);
+                        entriesContainer.appendChild(entryDiv);
 						//Append everything to the container
                         entriesContainer.appendChild(entryDiv);
                     });
@@ -182,7 +193,7 @@
 		function compareDate(a, b) {
 		  const firstDate = new Date(a.date);
 		  const secondDate = new Date(b.date);
-		  const result = (a < b) ? 1 : (a > b) ? -1 : 0;
+		  const result = (firstDate < secondDate) ? 1 : (firstDate > secondDate) ? -1 : 0;
 		  return result;
 		};
 
