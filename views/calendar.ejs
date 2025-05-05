@@ -156,7 +156,6 @@
                 year--;
             }
             generate();
-            displayEvents();
         });
 
         //handle next month navigation
@@ -168,7 +167,6 @@
                 year++;
             }
             generate();
-            displayEvents();
         });
 
         //Highlight event days: currently not working
@@ -195,14 +193,6 @@
 
             // Add event to the events array
             events.push(event);
-    
-           console.log(events);
-
-            // Display event under the form
-            const eventElement = createEventDisplay(event);
-            eventList.appendChild(eventElement);
-
-            HighlightE(event);
 
             fetch('/calendar', {
             method: 'POST',
@@ -223,6 +213,7 @@
             .catch(error => {
                 console.error('Error:', error);
             });
+            displayEvents();
 
             // Clear form inputs
             document.getElementById("name").value = "";
